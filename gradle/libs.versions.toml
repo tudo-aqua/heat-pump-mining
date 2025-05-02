@@ -1,0 +1,42 @@
+# SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+# 
+# SPDX-License-Identifier: Apache-2.0
+
+[versions]
+
+dokka = "2.0.0"
+kotlin = "2.1.20"
+prettier-properties = "0.3.0"
+prettier-toml = "2.0.1"
+
+[plugins]
+
+detekt = { id = "io.gitlab.arturbosch.detekt", version = "1.23.8" }
+dokka-html = { id = "org.jetbrains.dokka", version.ref = "dokka" }
+dokka-javadoc = { id = "org.jetbrains.dokka-javadoc", version.ref = "dokka" }
+gitVersioning = { id = "me.qoomon.git-versioning", version = "6.4.4" }
+kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+moduleInfo = { id = "org.glavo.compile-module-info-plugin", version = "2.0" }
+nexusPublish = { id = "io.github.gradle-nexus.publish-plugin", version = "2.0.0" }
+node = { id = "com.github.node-gradle.node", version = "7.1.0" }
+runtime = { id = "org.beryx.runtime", version = "1.13.1" }
+spotless = { id = "com.diffplug.spotless", version = "7.0.3" }
+taskTree = { id = "com.dorongold.task-tree", version = "4.0.1" }
+versions = { id = "com.github.ben-manes.versions", version = "0.52.0" }
+
+[libraries]
+
+assertj-core = { group = "org.assertj", name = "assertj-core", version = "3.27.3" }
+clikt = { group = "com.github.ajalt.clikt", name = "clikt", version = "5.0.3" }
+commons-math = { group = "org.apache.commons", name = "commons-math3", version = "3.6.1" }
+detekt-compiler = { group = "com.braisgabin.detekt", name = "kotlin-compiler-wrapper", version = "0.0.4" }
+detekt-faire = { group = "com.faire", name = "faire-detekt-rules", version = "0.5.1" }
+junit = { group = "org.junit", name = "junit-bom", version = "5.12.2" }
+junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter" }
+junit-launcher = { group = "org.junit.platform", name = "junit-platform-launcher" }
+learnlib = { group = "de.learnlib.distribution", name = "learnlib-distribution", version = "0.18.0" }
+rereso = { group = "tools.aqua", name = "rereso", version = "0.1" }
+serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version = "1.8.1" }
+slf4j = { group = "org.slf4j", name = "slf4j-simple", version = "2.0.17" }
+z3 = { group = "tools.aqua", name = "z3-turnkey", version = "4.14.0" }

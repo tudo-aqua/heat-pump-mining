@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+#
+# SPDX-License-Identifier: Apache-2.0
+
+Bootstrap: docker
+From: ubuntu:rolling
+
+%files
+  build/jpackage/heat-pump-mining_0.0.0_amd64.deb /
+
+%post
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ./heat-pump-mining_0.0.0_amd64.deb
+  ln -s /opt/heat-pump-mining/bin/heat-pump-mining /usr/local/bin
