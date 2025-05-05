@@ -48,7 +48,7 @@ internal class FTestTest {
       epsilon: Double
   ) {
     assertThat(fTestSimilarity(redAverage.seconds, redSupport, blueAverage.seconds, blueSupport))
-        .isCloseTo(1.0 - epsilon, 0.1.percent)
+        .isCloseTo(epsilon, 0.1.percent)
   }
 
   @Test

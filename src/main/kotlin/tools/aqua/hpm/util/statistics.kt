@@ -34,7 +34,7 @@ fun hoeffdingSimilarity(
     when {
       frequency1 == 0 && frequency2 == 0 -> 1.0
       frequency1 == 0 || frequency2 == 0 -> 0.0
-      else -> 1.0 - hoeffdingSignificance(frequency1, totalFrequency1, frequency2, totalFrequency2)
+      else -> hoeffdingSignificance(frequency1, totalFrequency1, frequency2, totalFrequency2)
     }
 
 fun hoeffdingSignificance(
@@ -83,9 +83,7 @@ fun fTestSimilarity(
 ): Double =
     when {
       redSupport <= 1 || blueSupport <= 2 -> 1.0
-      else ->
-          1.0 -
-              fTestSignificance(redAverage / blueAverage, redSupport, blueSupport).coerceAtMost(1.0)
+      else -> fTestSignificance(redAverage / blueAverage, redSupport, blueSupport).coerceAtMost(1.0)
     }
 
 fun fTestSignificance(redBlueAverageRatio: Double, redSupport: Int, blueSupport: Int): Double {
@@ -100,45 +98,3 @@ fun fTestSignificance(redBlueAverageRatio: Double, redSupport: Int, blueSupport:
   val rhoSquared = (nb.pow(2) * (nr + nb - 1)) / (nr * (nb - 1).pow(2) * (nb - 2))
   return rhoSquared / muDifferenceSquared
 }
-
-// fun main() {
-//    (10..100 step 10).forEach { f1 ->
-//        (f1+1..100 step 10).forEach { n1 ->
-//            (10..100 step 10).forEach { f2 ->
-//                (f2 + 1..100 step 10).forEach { n2 ->
-//                    val fs = fTestSignificance(f1.seconds, n1, f2.seconds, n2)
-//                    var eps = 0.0
-//                    do {
-//                        eps += 0.01
-//                        if (eps > 1.0) eps = 1.0
-//                        print("f1=$f1, n1=$n1, f2=$f2, n2=$n2, eps=$eps")
-//                        val ft = fTestLegacy(f1.seconds, n1, f2.seconds, n2, eps)
-//                        val ft2 = fTest(f1.seconds, n1, f2.seconds, n2, eps)
-//                        println(" -> fs=$fs, ft=$ft, ft2=$ft2")
-//                        check(ft == ft2)
-//                    } while (eps < 1.0)
-//                }
-//            }
-//        }
-//    }
-//
-//    (10..100 step 10).forEach { f1 ->
-//        (f1+1..100 step 10).forEach { n1 ->
-//            (10..100 step 10).forEach { f2 ->
-//                (f2 + 1..100 step 10).forEach { n2 ->
-//                    val hs = hoeffdingSignificance(f1, n1, f2, n2)
-//                    var eps = 0.0
-//                    do {
-//                        eps += 0.01
-//                        if (eps > 1.0) eps = 1.0
-//                        print("f1=$f1, n1=$n1, f2=$f2, n2=$n2, eps=$eps")
-//                        val ht = hoeffdingTestLegacy(f1, n1, f2, n2, eps*2.0)
-//                        val ht2 = hoeffdingTest(f1, n1, f2, n2, eps)
-//                        println(" -> hs=$hs, ht=$ht, ht2=$ht2")
-//                        check(ht == ht2)
-//                    } while (eps < 1.0)
-//                }
-//            }
-//        }
-//    }
-// }

@@ -49,7 +49,7 @@ internal class HoeffdingTestTest {
       epsilon: Double
   ) {
     assertThat(hoeffdingSimilarity(frequency1, totalFrequency1, frequency2, totalFrequency2))
-        .isCloseTo(1.0 - epsilon, 0.1.percent)
+        .isCloseTo(epsilon, 0.1.percent)
   }
 
   @Test
