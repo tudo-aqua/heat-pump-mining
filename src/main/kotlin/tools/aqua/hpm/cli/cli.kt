@@ -156,7 +156,7 @@ class Validate : CliktCommand() {
           automaton
               .getViterbiPaths<DFPTIOState, String, DFPTIOTransition, String>(
                   trace, normalizeLikelihood)
-              .maxOf { (_, score) -> score }
+              .maxOfOrNull { (_, score) -> score } ?: 0.0
       writer.println(listOf(log.name, revisionScore, pathLikeliness).joinToString(",\t"))
     }
   }

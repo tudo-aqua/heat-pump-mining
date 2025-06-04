@@ -24,9 +24,9 @@ fun <S, I, T, O> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S,
 ): Double {
   require(frequencyWeight in 0.0..1.0) { "frequency weight must be in [0, 1]" }
 
-  return getMatchingPaths(word).maxOf {
+  return getMatchingPaths(word).maxOfOrNull {
     computeTraceSimilarity(alphabet, word, it, frequencyWeight)
-  }
+  } ?: 0.0
 }
 
 fun <S, I, T, O> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, O>
