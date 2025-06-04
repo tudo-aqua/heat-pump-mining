@@ -61,6 +61,8 @@ private constructor(
 
   override fun getTransitionOrNull(input: I, output: O): FrequencyTransition<PTANode<I, O>, I>? =
       transitionsMutable[input, output]
+
+  override fun toString(): String = "PTANode@${hashCode()}[output=$output]"
 }
 
 class TimedFrequencyPTA<I, O>(rootOutput: O) :

@@ -112,8 +112,10 @@ class Learn : CliktCommand() {
             tailLength,
             analyzeMergedSamples)
     val canonicalFirst = archive.logs.first().entries.first().value
+    println("Canonical first event: $canonicalFirst")
     val usableLogs = archive.logs.filter { it.entries.first().value == canonicalFirst }
-    learner.addSamples(usableLogs.map { it.toQuery(ComparableUnit) })
+    println("${usableLogs.size} of ${archive.logs.size} match the canonical first event.")
+    learner.addSamples(usableLogs.map { it.toTimedIOTrace(ComparableUnit).toQuery() })
     val automaton = learner.computeModel()
 
     automaton.writeDot(output.createParentDirectories(), setOf(ComparableUnit))

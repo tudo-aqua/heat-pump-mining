@@ -6,15 +6,19 @@ package tools.aqua.hpm.data
 
 import de.learnlib.query.DefaultQuery
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.ZERO
 import net.automatalib.word.Word
 import tools.aqua.rereso.log.Log
 
-fun <T> Log.toQuery(inputSymbol: T): DefaultQuery<T, Word<Pair<Duration, String>>> =
-    DefaultQuery<T, Word<Pair<Duration, String>>>(
-        Word.fromList(List(entries.size - 1) { inputSymbol }),
-        Word.fromList(entries.map { it.relativeStart!! to it.value }))
+fun <I, O> TimedIOTrace<I, O>.toQuery(): DefaultQuery<I, Word<Pair<Duration, O>>> {
+  return DefaultQuery<I, Word<Pair<Duration, O>>>(
+      Word.fromList(tail.map { it.input }),
+      Word.fromList(listOf(ZERO to head) + tail.map { it.time to it.output }))
+}
 
 fun <T> Log.toTimedIOTrace(inputSymbol: T): TimedIOTrace<T, String> =
     TimedIOTrace(
         entries.first().value,
-        entries.drop(1).map { TimedIO(it.relativeStart!!, inputSymbol, it.value) })
+        entries.zipWithNext().map { (past, current) ->
+          TimedIO(current.relativeStart!! - past.relativeStart!!, inputSymbol, current.value)
+        })
