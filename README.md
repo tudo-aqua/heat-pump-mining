@@ -31,14 +31,26 @@ Additionally, executable bundles can be built:
 ./gradlew singularityImage  # Singularity image, needs singularity and Linux platform
 ```
 
+Style is enforced via Spotless and wrapped inside Gradle's testing machinery:
+
+```shell
+./gradlew spotlessApply  # Format all files, should be run before committing or full building
+./gradlew check  # Run tests and style checker
+```
+
 ## Bundled Tools
+
+When properly installed via the artifact created by jpackage or inside the singularity container,
+the tool can be invoked as `heat-pump-mining [ARGS]`. Note that when running via Gradle or out of an
+IDE, only the arguments can be passed (i.e., `heat-pump-mining` is _not_ part of the normal
+parameters).
 
 ### Converter
 
 Converts the change point detector's format to the JSON format used by this tool.
 
 ```shell
-heat-pump-mining convert -i NibeData_EventTrace_$number.zip -o nibe.json.zst
+heat-pump-mining convert-format -i NibeData_EventTrace_$number.zip -o nibe.json.zst
 ```
 
 ### Select and Merge
