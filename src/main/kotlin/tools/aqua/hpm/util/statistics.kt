@@ -64,7 +64,7 @@ fun fTest(
     epsilon: Double
 ): Boolean {
   require(epsilon >= 0) { "epsilon must be positive" }
-  if (redSupport <= 1 || blueSupport <= 2) return true
+  if (redSupport <= 2 || blueSupport <= 1) return true
   return fTestSignificance(redAverage, redSupport, blueAverage, blueSupport) >= epsilon
 }
 
