@@ -76,8 +76,6 @@ private constructor(
       target: AlergiaState<I, O>,
   ) : this(mutableListOf(originalTransition), source, target)
 
-  val isLoop: Boolean = source == target
-
   override val input: I = mergedTransitions.first().input
   val output: O = target.output
 
@@ -85,10 +83,14 @@ private constructor(
   override val frequency: Int
     get() = mergedTransitions.sumOf { it.frequency }
 
-  fun mergeInto(target: AlergiaTransition<I, O>): AlergiaTransition<I, O> {
-    require(target.input == input)
+  init {
+    source.addTransition(this)
+  }
 
-    unregister()
+  fun mergeInto(target: AlergiaTransition<I, O>): AlergiaTransition<I, O> {
+    require(target != this) { "self-merge of $this" }
+    require(target.input == input)
+    this.source.removeTransition(this)
     target.mergedTransitions += mergedTransitions
     return target
   }
@@ -97,22 +99,9 @@ private constructor(
       source: AlergiaState<I, O> = this.source,
       target: AlergiaState<I, O> = this.target
   ): AlergiaTransition<I, O> {
-    unregister()
+    require(source != this.source || target != this.target) { "self-move of $this" }
+    this.source.removeTransition(this)
     return AlergiaTransition(mergedTransitions, source, target)
-  }
-
-  init {
-    register()
-  }
-
-  private fun register() {
-    source.addTransition(this)
-    if (!isLoop) target.addTransition(this)
-  }
-
-  private fun unregister() {
-    source.removeTransition(this)
-    if (!isLoop) target.removeTransition(this)
   }
 }
 
@@ -122,6 +111,8 @@ private class AlergiaState<I : Comparable<I>, O : Comparable<O>>(
   private val mergedNodes = mutableListOf<TimedFrequencyNode<I, O, *>>(originalNode)
 
   private var accessStringMutable: AccessString<I, O>? = null
+
+  private var accessTransitionMutable: AlergiaTransition<I, O>? = null
 
   val isPromoted: Boolean
     get() = accessStringMutable != null
@@ -136,17 +127,23 @@ private class AlergiaState<I : Comparable<I>, O : Comparable<O>>(
     accessStringMutable =
         parentTransition.source.accessString +
             (originalNode.accessTransition!!.input to originalNode.output)
+    accessTransitionMutable = parentTransition
   }
 
   val accessString: AccessString<I, O>
     get() = checkNotNull(accessStringMutable) { "access string of unpromoted node not available" }
 
-  private val inboundTransitionsMutable =
-      TwoStageHashMap<AlergiaState<I, O>, I, AlergiaTransition<I, O>>()
-  val inboundTransitions: Collection<AlergiaTransition<I, O>> = inboundTransitionsMutable
+  val accessTransition: AlergiaTransition<I, O>?
+    get() {
+      check(isPromoted) { "access transition of unpromoted node not available" }
+      return accessTransitionMutable
+    }
 
   private val transitionsMutable = TwoStageHashMap<I, O, AlergiaTransition<I, O>>()
   override val transitions: Collection<AlergiaTransition<I, O>> = transitionsMutable
+
+  operator fun get(input: I, output: O): AlergiaTransition<I, O>? =
+      transitionsMutable[input, output]
 
   override fun getTransitionOrNull(
       input: I,
@@ -158,66 +155,17 @@ private class AlergiaState<I : Comparable<I>, O : Comparable<O>>(
   ): Collection<FrequencyMergedTransition<AlergiaState<I, O>, I>> = transitionsMutable[input]
 
   fun addTransition(transition: AlergiaTransition<I, O>) {
-    require(transition.source == this || transition.target == this) {
-      "transition $transition is foreign"
-    }
-    if (transition.source == this) {
-      check(transitionsMutable.put(transition.input, transition.output, transition) == null) {
-        "transition $transition already existed"
-      }
-    } else {
-      check(
-          inboundTransitionsMutable.put(transition.source, transition.input, transition) == null) {
-            "transition $transition already existed"
-          }
+    require(transition.source == this) { "transition $transition is foreign" }
+    require(transitionsMutable.put(transition.input, transition.output, transition) == null) {
+      "transition $transition already existed"
     }
   }
 
   fun removeTransition(transition: AlergiaTransition<I, O>) {
-    require(transition.source == this || transition.target == this) {
-      "transition $transition is foreign"
+    require(transition.source == this) { "transition $transition is foreign" }
+    require(transitionsMutable.remove(transition.input, transition.output) != null) {
+      "transition $transition was not present"
     }
-    if (transition.source == this) {
-      check(transitionsMutable.remove(transition.input, transition.output) != null) {
-        "transition $transition was not present"
-      }
-    } else {
-      check(inboundTransitionsMutable.remove(transition.source, transition.input) != null) {
-        "transition $transition was not present"
-      }
-    }
-  }
-
-  fun mergeInto(target: AlergiaState<I, O>): AlergiaState<I, O> {
-    require(target != this) { "attempt to self-merge $target" }
-    require(target.output == output) { "state $target is output-incompatible" }
-
-    target.mergedNodes += mergedNodes
-
-    transitionsMutable.toList().forEach { transition ->
-      val targetTransition = target.transitionsMutable[transition.input, transition.output]
-      if (targetTransition != null) {
-        transition.mergeInto(targetTransition)
-      } else {
-        if (transition.isLoop) {
-          transition.moveTo(source = target, target = target)
-        } else {
-          transition.moveTo(source = target)
-        }
-      }
-    }
-
-    inboundTransitionsMutable.toList().forEach { transition ->
-      check(!transition.isLoop) { "loop transition leaked into inbound" }
-      val targetTransition = target.inboundTransitionsMutable[transition.source, transition.input]
-      if (targetTransition != null) {
-        transition.mergeInto(targetTransition)
-      } else {
-        transition.moveTo(target = target)
-      }
-    }
-
-    return target
   }
 
   override val output: O = originalNode.output
@@ -227,21 +175,23 @@ private class AlergiaState<I : Comparable<I>, O : Comparable<O>>(
   override val timings: Collection<Duration>
     get() = mergedNodes.flatMap { it.timings }
 
-  operator fun plusAssign(node: AlergiaState<I, O>) {
-    require(node.output == output)
-    mergedNodes += node.mergedNodes
+  fun mergeInto(target: AlergiaState<I, O>) {
+    require(target.output == output)
+    require(target != this) { "self-merge of $this" }
+    target.mergedNodes += mergedNodes
   }
+
+  override fun toString(): String = "AlergiaState@${hashCode()}[output=$output]"
 }
 
 private infix fun <I : Comparable<I>, O : Comparable<O>> AlergiaState<I, O>.transitionPairs(
     other: AlergiaState<I, O>
 ) = iterator {
-  val transitionPairs =
-      transitions.forEach { ourT ->
-        other.getTransitionOrNull(ourT.input, ourT.target.output)?.let { otherT ->
-          yield(ourT to otherT)
-        }
-      }
+  transitions.forEach { ourT ->
+    other.getTransitionOrNull(ourT.input, ourT.target.output)?.let { otherT ->
+      yield(ourT to otherT)
+    }
+  }
 }
 
 class RTIOAlergiaMergedAutomaton<I : Comparable<I>, O : Comparable<O>>(
@@ -276,7 +226,10 @@ class RTIOAlergiaMergedAutomaton<I : Comparable<I>, O : Comparable<O>>(
   private val initialState =
       DeepRecursiveFunction<TimedFrequencyTreeNode<I, O, *>, AlergiaState<I, O>> { node ->
         AlergiaState(node).also { state ->
-          node.transitions.forEach { AlergiaTransition(it, state, callRecursive(it.target)) }
+          node.transitions.forEach {
+            // transitions register themselves
+            AlergiaTransition(it, state, callRecursive(it.target))
+          }
         }
       }(pta.getInitialState())
 
@@ -308,46 +261,15 @@ class RTIOAlergiaMergedAutomaton<I : Comparable<I>, O : Comparable<O>>(
 
   private fun mergeOrPromoteNext(blueState: AlergiaState<I, O>) {
     val reds = if (parallel) redStates.parallelStream() else redStates.stream()
-    val merges = reds.map { planMergeOrNull(it, blueState) }.filter { it != null }
-    val mergeOrEmpty = if (deterministic) merges.findFirst() else merges.findAny()
+    val mergeableRed = reds.filter { isMergeCompatible(it, blueState) }
+    val redOrEmpty = if (deterministic) mergeableRed.findFirst() else mergeableRed.findAny()
 
-    if (mergeOrEmpty.isPresent) {
-      mergeOrEmpty.get().forEach { (target, source) -> merge(target, source) }
-    } else {
+    if (redOrEmpty.isEmpty) {
       promote(blueState)
+    } else {
+      mergeRecursively(redOrEmpty.get(), blueState)
     }
   }
-
-  private fun merge(target: AlergiaState<I, O>, source: AlergiaState<I, O>) {
-    check(source !in redStates) { "merging looped back to red state $source" }
-    source.mergeInto(target)
-    blueStates.remove(source)
-    if (target in redStates) {
-      promoteSuccessors(target)
-    }
-  }
-
-  private fun promote(state: AlergiaState<I, O>) {
-    check(state !in redStates) { "red state $state re-promoted" }
-    redStates += state
-    promoteSuccessors(state)
-  }
-
-  private fun promoteSuccessors(state: AlergiaState<I, O>) {
-    state.transitions.forEach { outgoing ->
-      outgoing.target.let { successor ->
-        if (!successor.isPromoted) {
-          successor.promoteWithParent(outgoing)
-          blueStates += successor
-        }
-      }
-    }
-  }
-
-  private data class Merge<I : Comparable<I>, O : Comparable<O>>(
-      val target: AlergiaState<I, O>,
-      val source: AlergiaState<I, O>,
-  )
 
   private data class MergeExplorationTask<I : Comparable<I>, O : Comparable<O>>(
       val target: AlergiaState<I, O>,
@@ -357,37 +279,34 @@ class RTIOAlergiaMergedAutomaton<I : Comparable<I>, O : Comparable<O>>(
       val remainingTail: Int?,
   )
 
-  private fun planMergeOrNull(
-      target: AlergiaState<I, O>,
-      source: AlergiaState<I, O>
-  ): List<Merge<I, O>>? =
-      DeepRecursiveFunction<MergeExplorationTask<I, O>, List<Merge<I, O>>?> { task ->
+  private fun isMergeCompatible(target: AlergiaState<I, O>, source: AlergiaState<I, O>): Boolean =
+      DeepRecursiveFunction<MergeExplorationTask<I, O>, Boolean> { task ->
         val (target, source, frequencySSL, timingSSL, tail) = task
 
         // always check output compatibility
-        if (target.output != source.output) return@DeepRecursiveFunction null
+        if (target.output != source.output) {
+          return@DeepRecursiveFunction false
+        }
 
         // if tail is not exceeded: check stochastic compatibility
         if (tail != 0 && !isMergeStochasticallyValid(target, source, frequencySSL, timingSSL)) {
-          return@DeepRecursiveFunction null
+          return@DeepRecursiveFunction false
         }
 
         // recurse into children
-        val plan = mutableListOf<Merge<I, O>>()
         (source transitionPairs target).forEach { (sourceT, targetT) ->
           // if a single child cannot merge, abort
-          plan +=
-              callRecursive(
-                  MergeExplorationTask(
-                      targetT.target,
-                      sourceT.target,
-                      frequencySSL * frequencySimilaritySignificanceDecay,
-                      timingSSL * timingSimilaritySignificanceDecay,
-                      tail?.let { (it - 1).coerceAtLeast(0) })) ?: return@DeepRecursiveFunction null
+          if (!callRecursive(
+              MergeExplorationTask(
+                  targetT.target,
+                  sourceT.target,
+                  frequencySSL * frequencySimilaritySignificanceDecay,
+                  timingSSL * timingSimilaritySignificanceDecay,
+                  tail?.let { (it - 1).coerceAtLeast(0) }))) {
+            return@DeepRecursiveFunction false
+          }
         }
-
-        // do own merge last (merge tail-first)
-        plan.also { it += Merge(target, source) }
+        return@DeepRecursiveFunction true
       }(
           MergeExplorationTask(
               target,
@@ -425,6 +344,72 @@ class RTIOAlergiaMergedAutomaton<I : Comparable<I>, O : Comparable<O>>(
     }
 
     return true
+  }
+
+  private data class MergeTask<I : Comparable<I>, O : Comparable<O>>(
+      val targetParent: AlergiaState<I, O>,
+      val target: AlergiaState<I, O>,
+      val sourceAccess: AlergiaTransition<I, O>,
+      val source: AlergiaState<I, O>,
+  )
+
+  private fun mergeRecursively(target: AlergiaState<I, O>, source: AlergiaState<I, O>) {
+    require(source != target) { "self-merge of $source" }
+    val access = requireNotNull(source.accessTransition) { "cannot merge root away" }
+    DeepRecursiveFunction<MergeTask<I, O>, Unit> {
+        (
+            targetParent,
+            target,
+            sourceAccess,
+            source,
+        ) ->
+      check(source !in redStates) { "merging looped back to red state $source" }
+
+      blueStates.remove(source)
+
+      // merge timing information
+      source.mergeInto(target)
+
+      val targetAccess = targetParent[sourceAccess.input, source.output]
+      if (targetAccess != null && targetAccess != sourceAccess) {
+        // target has a matching inbound transition
+        sourceAccess.mergeInto(targetAccess)
+      } else {
+        // target has no matching inbound transition, create one
+        sourceAccess.moveTo(targetParent, target)
+      }
+
+      // copy to avoid concurrent modification exceptions
+      source.transitions.toList().forEach { sourceTransition ->
+        val sourceSuccessor = sourceTransition.target
+        val targetTransition = target[sourceTransition.input, sourceTransition.output]
+        if (targetTransition != null) {
+          callRecursive(
+              MergeTask(target, targetTransition.target, sourceTransition, sourceTransition.target))
+        } else {
+          sourceTransition.moveTo(target, sourceSuccessor)
+        }
+      }
+    }(MergeTask(access.source, target, access, source))
+
+    redStates.forEach(::promoteSuccessors)
+  }
+
+  private fun promote(state: AlergiaState<I, O>) {
+    check(state !in redStates) { "red state $state re-promoted" }
+    redStates += state
+    promoteSuccessors(state)
+  }
+
+  private fun promoteSuccessors(state: AlergiaState<I, O>) {
+    state.transitions.forEach { outgoing ->
+      outgoing.target.let { successor ->
+        if (!successor.isPromoted) {
+          successor.promoteWithParent(outgoing)
+          blueStates += successor
+        }
+      }
+    }
   }
 
   override fun getStates(): Collection<TimedFrequencyNode<I, O, *>> = redStates
