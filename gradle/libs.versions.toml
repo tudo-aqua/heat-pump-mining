@@ -36,7 +36,7 @@ junit = { group = "org.junit", name = "junit-bom", version = "5.13.0" }
 junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter" }
 junit-launcher = { group = "org.junit.platform", name = "junit-platform-launcher" }
 learnlib = { group = "de.learnlib.distribution", name = "learnlib-distribution", version = "0.18.0" }
-rereso = { group = "tools.aqua", name = "rereso", version = "0.1" }
+rereso = { group = "tools.aqua", name = "rereso", version = "0.3" }
 serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version = "1.8.1" }
 slf4j = { group = "org.slf4j", name = "slf4j-simple", version = "2.0.17" }
 z3 = { group = "tools.aqua", name = "z3-turnkey", version = "4.14.0" }
