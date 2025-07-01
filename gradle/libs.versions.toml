@@ -39,4 +39,4 @@ learnlib = { group = "de.learnlib.distribution", name = "learnlib-distribution",
 rereso = { group = "tools.aqua", name = "rereso", version = "0.3.1" }
 serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version = "1.8.1" }
 slf4j = { group = "org.slf4j", name = "slf4j-simple", version = "2.0.17" }
-z3 = { group = "tools.aqua", name = "z3-turnkey", version = "4.14.0" }
+z3 = { group = "tools.aqua", name = "z3-turnkey", version = "4.14.1" }
