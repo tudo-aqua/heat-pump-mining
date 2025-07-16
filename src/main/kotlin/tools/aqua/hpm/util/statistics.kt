@@ -32,8 +32,8 @@ fun hoeffdingSimilarity(
     totalFrequency2: Int
 ): Double =
     when {
-      frequency1 == 0 && frequency2 == 0 -> 1.0
-      frequency1 == 0 || frequency2 == 0 -> 0.0
+      totalFrequency1 == 0 && totalFrequency2 == 0 -> 1.0
+      totalFrequency1 == 0 || totalFrequency2 == 0 -> 0.0
       else -> hoeffdingSignificance(frequency1, totalFrequency1, frequency2, totalFrequency2)
     }
 
@@ -43,8 +43,8 @@ fun hoeffdingSignificance(
     frequency2: Int,
     totalFrequency2: Int
 ): Double {
-  require(0 < frequency1 && frequency1 <= totalFrequency1) { "0 < f1 <= n1 must hold" }
-  require(0 < frequency2 && frequency2 <= totalFrequency2) { "0 < f2 <= n2 must hold" }
+  require(0 < totalFrequency1 && frequency1 <= totalFrequency1) { "0 < n1 && f1 <= n1 must hold" }
+  require(0 < totalFrequency2 && frequency2 <= totalFrequency2) { "0 < n2 && n2 <= n2 must hold" }
 
   val f1 = frequency1.toDouble()
   val n1 = totalFrequency1.toDouble()

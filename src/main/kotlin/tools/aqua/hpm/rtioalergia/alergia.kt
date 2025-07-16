@@ -18,6 +18,7 @@ import tools.aqua.hpm.automata.DeterministicFrequencyProbabilisticTimedInputOutp
 import tools.aqua.hpm.util.TwoStageHashMap
 import tools.aqua.hpm.util.fTest
 import tools.aqua.hpm.util.hoeffdingTest
+import tools.aqua.rereso.util.mapToSet
 
 /**
  * An I/O access string for a given red or blue state. The string consists of the [head], i.e., the
@@ -184,15 +185,38 @@ private class AlergiaState<I : Comparable<I>, O : Comparable<O>>(
   override fun toString(): String = "AlergiaState@${hashCode()}[output=$output]"
 }
 
+private data class MaybeTransitionPair<I : Comparable<I>, O : Comparable<O>>(
+    val ours: FrequencyMergedTransition<AlergiaState<I, O>, I>?,
+    val theirs: FrequencyMergedTransition<AlergiaState<I, O>, I>?,
+) {
+  init {
+    require(ours != null || theirs != null)
+  }
+
+  val input: I = ours?.input ?: theirs!!.input
+  val output: O = ours?.target?.output ?: theirs!!.target.output
+}
+
+private infix fun <I : Comparable<I>, O : Comparable<O>> AlergiaState<I, O>.maybeTransitionPairs(
+    other: AlergiaState<I, O>
+): Set<MaybeTransitionPair<I, O>> =
+    transitions.mapToSet { ourT ->
+      MaybeTransitionPair(ourT, other.getTransitionOrNull(ourT.input, ourT.target.output))
+    } +
+        other.transitions.mapToSet { theirT ->
+          MaybeTransitionPair(getTransitionOrNull(theirT.input, theirT.target.output), theirT)
+        }
+
+@Suppress("UNCHECKED_CAST")
 private infix fun <I : Comparable<I>, O : Comparable<O>> AlergiaState<I, O>.transitionPairs(
     other: AlergiaState<I, O>
-) = iterator {
-  transitions.forEach { ourT ->
-    other.getTransitionOrNull(ourT.input, ourT.target.output)?.let { otherT ->
-      yield(ourT to otherT)
+): List<
+    Pair<
+        FrequencyMergedTransition<AlergiaState<I, O>, I>,
+        FrequencyMergedTransition<AlergiaState<I, O>, I>>> =
+    maybeTransitionPairs(other).mapNotNull { (ourT, theirT) ->
+      if (ourT != null && theirT != null) ourT to theirT else null
     }
-  }
-}
 
 class RTIOAlergiaMergedAutomaton<I : Comparable<I>, O : Comparable<O>>(
     pta: TimedFrequencyPTA<I, O>,
@@ -330,14 +354,17 @@ class RTIOAlergiaMergedAutomaton<I : Comparable<I>, O : Comparable<O>>(
         .not())
         return false
 
-    (source transitionPairs target).forEach { (sourceT, targetT) ->
+    (source maybeTransitionPairs target).forEach { pair ->
+      val (sourceT, targetT) = pair
       if (hoeffdingTest(
-              if (analyzeMergedSamples) targetT.frequency else targetT.originalFrequency,
-              if (analyzeMergedSamples) target.totalFrequency(targetT.input)
-              else target.totalOriginalFrequency(targetT.input),
-              if (analyzeMergedSamples) sourceT.frequency else sourceT.originalFrequency,
-              if (analyzeMergedSamples) source.totalFrequency(sourceT.input)
-              else source.totalOriginalFrequency(sourceT.input),
+              if (analyzeMergedSamples) targetT?.frequency ?: 0
+              else targetT?.originalFrequency ?: 0,
+              if (analyzeMergedSamples) target.totalFrequency(pair.input)
+              else target.totalOriginalFrequency(pair.input),
+              if (analyzeMergedSamples) sourceT?.frequency ?: 0
+              else sourceT?.originalFrequency ?: 0,
+              if (analyzeMergedSamples) source.totalFrequency(pair.input)
+              else source.totalOriginalFrequency(pair.input),
               frequencySimilaritySignificanceLocal)
           .not())
           return false
