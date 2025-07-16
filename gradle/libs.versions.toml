@@ -32,7 +32,7 @@ clikt = { group = "com.github.ajalt.clikt", name = "clikt", version = "5.0.3" }
 commons-math = { group = "org.apache.commons", name = "commons-math3", version = "3.6.1" }
 detekt-compiler = { group = "com.braisgabin.detekt", name = "kotlin-compiler-wrapper", version = "0.0.4" }
 detekt-faire = { group = "com.faire", name = "faire-detekt-rules", version = "0.5.1" }
-junit = { group = "org.junit", name = "junit-bom", version = "5.13.1" }
+junit = { group = "org.junit", name = "junit-bom", version = "5.13.3" }
 junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter" }
 junit-launcher = { group = "org.junit.platform", name = "junit-platform-launcher" }
 learnlib = { group = "de.learnlib.distribution", name = "learnlib-distribution", version = "0.18.0" }
