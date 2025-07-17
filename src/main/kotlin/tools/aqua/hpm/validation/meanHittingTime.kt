@@ -20,14 +20,14 @@ import tools.aqua.hpm.automata.DeterministicFrequencyProbabilisticTimedInputOutp
 import tools.aqua.hpm.util.toBigIntegerNanoseconds
 
 fun <S, I, T, O> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, O>
-    .computeMeanHittingTimes(alphabet: Iterable<I>, hitTargets: Set<S>): Map<S, Duration> {
+    .computeMeanHittingTimes(input: I, hitTargets: Set<S>): Map<S, Duration> {
   require(hitTargets.isNotEmpty()) { "hit targets are empty" }
 
-  computeReach(alphabet)
+  computeReach(setOf(input))
       .filter { (_, reach) -> reach.intersect(hitTargets).isEmpty() }
       .let { check(it.isEmpty()) { "automaton hat states that cannot reach a hit target: $it" } }
 
-  return solveMeanHittingTimes(alphabet, hitTargets)
+  return solveMeanHittingTimes(input, hitTargets)
 }
 
 fun <S, I> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S, I, *, *>.computeReach(
@@ -53,7 +53,7 @@ tailrec fun <S, I, T> DeterministicFrequencyProbabilisticTimedInputOutputAutomat
 
 fun <S, I, T, O> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, O>
     .solveMeanHittingTimes(
-    alphabet: Iterable<I>,
+    input: I,
     hitTargets: Set<S>,
 ): Map<S, Duration> {
   Context().useApply {
@@ -65,15 +65,13 @@ fun <S, I, T, O> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S,
             mkEq(
                 stateTimes.getValue(source),
                 mkAdd(
-                    *alphabet
-                        .flatMap { getTransitions(source, it) }
+                    mkReal(getExitTime(source).toBigIntegerNanoseconds().toString()),
+                    *getTransitions(source, input)
                         .filter { getTransitionProbability(it) > 0 }
                         .map { transition ->
                           mkMul(
                               mkReal(getTransitionProbability(transition).toString()),
-                              mkAdd(
-                                  mkReal(getExitTime(source).toBigIntegerNanoseconds().toString()),
-                                  stateTimes.getValue(getSuccessor(transition))))
+                              stateTimes.getValue(getSuccessor(transition)))
                         }
                         .toTypedArray<Expr<RealSort>>())))
       }
