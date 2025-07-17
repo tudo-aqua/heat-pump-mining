@@ -46,11 +46,11 @@ fun hoeffdingSignificance(
     totalFrequency2: Int
 ): Double {
   require(0 < totalFrequency1) { "n1 must be strictly positive, is $totalFrequency1" }
-    require(frequency1 <= totalFrequency1) { "f1 must be leq n1, is $frequency1 > $totalFrequency1" }
-    require(0 < totalFrequency2) { "n2 must be strictly positive, is $totalFrequency2" }
-    require(frequency2 <= totalFrequency2) { "f2 must be leq n2, is $frequency2 > $totalFrequency2" }
+  require(frequency1 <= totalFrequency1) { "f1 must be leq n1, is $frequency1 > $totalFrequency1" }
+  require(0 < totalFrequency2) { "n2 must be strictly positive, is $totalFrequency2" }
+  require(frequency2 <= totalFrequency2) { "f2 must be leq n2, is $frequency2 > $totalFrequency2" }
 
-        val f1 = frequency1.toDouble()
+  val f1 = frequency1.toDouble()
   val n1 = totalFrequency1.toDouble()
   val f2 = frequency2.toDouble()
   val n2 = totalFrequency2.toDouble()
@@ -98,8 +98,8 @@ fun fTestSimilarity(
 
 fun fTestSignificance(redBlueAverageRatio: Double, redSupport: Int, blueSupport: Int): Double {
   require(redBlueAverageRatio >= 0.0) { "tr/tb must be positive, is $redBlueAverageRatio" }
-  require(redSupport > 2) { "nr must be > 2, is $redSupport" }
-  require(blueSupport > 1) { "nb must be > 1, is $blueSupport" }
+  require(redSupport > 1) { "nr must be > 1, is $redSupport" }
+  require(blueSupport > 2) { "nb must be > 2, is $blueSupport" }
 
   val nr = redSupport.toDouble()
   val nb = blueSupport.toDouble()
