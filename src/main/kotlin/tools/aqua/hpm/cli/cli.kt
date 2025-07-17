@@ -131,7 +131,7 @@ class Validate : CliktCommand() {
       option("-i", "--input")
           .path(mustExist = true, canBeDir = false, mustBeReadable = true)
           .required()
-  val output by option("-o", "--output").outputStream().defaultStdout()
+  val output by option("-o", "--output").outputStream(truncateExisting = true).defaultStdout()
 
   val silent by option("-s", "--silent").flag("-v", "--verbose")
   val frequencyWeight by
