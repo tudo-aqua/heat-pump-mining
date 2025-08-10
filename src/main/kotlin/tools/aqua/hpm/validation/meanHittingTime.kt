@@ -6,6 +6,7 @@ package tools.aqua.hpm.validation
 
 import com.microsoft.z3.Context
 import com.microsoft.z3.Expr
+import com.microsoft.z3.Global.setParameter
 import com.microsoft.z3.Model
 import com.microsoft.z3.RatNum
 import com.microsoft.z3.RealSort
@@ -19,44 +20,42 @@ import kotlin.time.Duration.Companion.seconds
 import tools.aqua.hpm.automata.DeterministicFrequencyProbabilisticTimedInputOutputAutomaton
 import tools.aqua.hpm.util.toBigIntegerNanoseconds
 
-fun <S, I, T, O> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, O>
-    .computeMeanHittingTimes(input: I, hitTargets: Set<S>): Map<S, Duration> {
+class UnconnectedAutomatonException(val unconnectedStates: Collection<*>) :
+    RuntimeException("Automaton hat states that cannot reach a hit target: $unconnectedStates")
+
+fun <S, I> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S, I, *, *>
+    .computeMeanHittingTimes(
+    input: I,
+    hitTargets: Set<S>,
+    parallel: Boolean = false
+): Map<S, Duration> {
   require(hitTargets.isNotEmpty()) { "hit targets are empty" }
 
-  computeReach(setOf(input))
-      .filter { (_, reach) -> reach.intersect(hitTargets).isEmpty() }
-      .let { check(it.isEmpty()) { "automaton hat states that cannot reach a hit target: $it" } }
+  (states - backwardsReach(hitTargets, setOf(input))).let {
+    if (it.isNotEmpty()) throw UnconnectedAutomatonException(it)
+  }
 
-  return solveMeanHittingTimes(input, hitTargets)
+  return solveMeanHittingTimes(input, hitTargets, parallel)
 }
 
-fun <S, I> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S, I, *, *>.computeReach(
-    alphabet: Iterable<I>
-): Map<S, Set<S>> =
-    computeReachInternal(
-        states.size - 2,
-        states.associateWith { state ->
-          setOf(state) + alphabet.flatMap { getSuccessors(state, it) }
-        })
+tailrec fun <S, I> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S, I, *, *>
+    .backwardsReach(targets: Set<S>, alphabet: Iterable<I>): Set<S> {
+  val reaching =
+      states.filterTo(mutableSetOf()) { state ->
+        alphabet.flatMap { getSuccessors(state, it) }.any { it in targets }
+      }
+  val newTargets = targets + reaching
+  return if (newTargets.size > targets.size) backwardsReach(newTargets, alphabet) else targets
+}
 
-tailrec fun <S, I, T> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, *>
-    .computeReachInternal(iterations: Int, lastState: Map<S, Set<S>>): Map<S, Set<S>> =
-    if (iterations == 0) {
-      lastState
-    } else {
-      val newState =
-          lastState.mapValues { (_, reached) ->
-            reached + reached.flatMap { lastState.getValue(it) }
-          }
-      if (newState != lastState) computeReachInternal(iterations - 1, newState) else lastState
-    }
-
-fun <S, I, T, O> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, O>
+fun <S, I, T> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, *>
     .solveMeanHittingTimes(
     input: I,
     hitTargets: Set<S>,
+    parallel: Boolean = false,
 ): Map<S, Duration> {
   Context().useApply {
+    if (parallel) setParameter("parallel.enable", "true")
     val stateTimes = states.withIndex().associate { (idx, state) -> state to mkRealConst("q_$idx") }
     mkSolver().apply {
       hitTargets.forEach { state -> add(mkEq(stateTimes.getValue(state), mkReal(0))) }

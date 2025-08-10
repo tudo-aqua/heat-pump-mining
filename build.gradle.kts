@@ -169,6 +169,12 @@ spotless {
                 "printWidth" to 100,
             ))
   }
+  format("sh") {
+    target("scripts/*.sh")
+    licenseHeader(apache20.asHashmarkComments(), """[.a-zA-Z0-9/*]+""").skipLinesMatching("^#!")
+    trimTrailingWhitespace()
+    endWithNewline()
+  }
   format("toml") {
     target("gradle/libs.versions.toml", "REUSE.toml")
     licenseHeader(apache20.asHashmarkComments(), """(version|\[[A-Za-z-]+])""")

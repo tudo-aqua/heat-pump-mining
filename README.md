@@ -58,10 +58,22 @@ heat-pump-mining convert-format -i NibeData_EventTrace_$number.zip -o nibe.json.
 Selects a subset of events from the inputs. This requires a key event and a list of events. It then
 uses the change points detected for the key event to segment the trace resulting from the
 combination of all selected events. The change points for non-key events are ignored. If the option
-`-f` is set, only one trace corresponding to key change 0 is created.
+`-f` is set, only one trace corresponding to key change 0 is created, if `-a` is set, each trace is
+converted ( continuing to the end), and if `-n` is set, each trace is shortened to the beginning of
+the next trace and converted ( the default setting).
 
 ```shell
 heat-pump-mining select-and-merge -i nibe.json.zst -o selected.json.zst -e event1 event2 ... -s key_event
+```
+
+### Generate Traces
+
+Generate random traces from a given automaton. The number of traces can be controlled via `-n`. The
+length is selected from a normal distribution from the mean `-l`, the standard deviation `-L`, and
+the optional seed `-s` (default `0`).
+
+```shell
+heat-pump-mining generate-traces -a examples.dot -o traces.json.zst -n 100 -l 1000 -L 22.5
 ```
 
 ### Learn
@@ -87,15 +99,25 @@ behavior:
 heat-pump-mining learn -i selected.json.zst -o nibe.dot
 ```
 
-### Validate
+### Validate Revision Score
 
-This measures a learned automaton's performance on all traces of a database. Two measures are
-computed: revision score ( i.e., inverse significances of the trace observations and the
-automaton's) and trace likeliness. Note that the latter is usually rounded down to zero for longer
-traces. The option `-f` can be used to shift the revision score weight towards transition
-likeliness; default is 0.5 (even weight). `-n` removes a normalization from the trace likeliness,
-resulting in slightly larger result values.
+This measures a learned automaton's performance on all traces of a database using the revision score
+metric. Two measures are computed: revision score (i.e., inverse significances of the trace
+observations and the automaton's) and trace likeliness. Note that the latter is usually rounded down
+to zero for longer traces. The option `-f` can be used to shift the revision score weight towards
+transition likeliness; default is 0.5 (even weight). `-n` removes a normalization from the trace
+likeliness, resulting in slightly larger result values.
 
 ```shell
-heat-pump-mining validate -a nibe.dot -i validation.json.zst
+heat-pump-mining validate-revision-score -a nibe.dot -i validation.json.zst
+```
+
+### Validate Hitting Time Prediction
+
+This measures a learned automaton's performance on all traces of a database w.r.t. mean hitting
+times errors. The events for which hitting times should be checked must be given via the `-e`
+option.
+
+```shell
+heat-pump-mining validate-hitting-times -a nibe.dot -i validation.json.zst -e d/event_defrost_0.0 d/event_defrost_2.0
 ```

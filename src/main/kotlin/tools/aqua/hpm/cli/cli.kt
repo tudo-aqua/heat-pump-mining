@@ -12,28 +12,37 @@ import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
+import com.github.ajalt.clikt.parameters.options.switch
 import com.github.ajalt.clikt.parameters.options.varargValues
 import com.github.ajalt.clikt.parameters.types.choice
 import com.github.ajalt.clikt.parameters.types.defaultStdout
 import com.github.ajalt.clikt.parameters.types.double
 import com.github.ajalt.clikt.parameters.types.int
+import com.github.ajalt.clikt.parameters.types.long
 import com.github.ajalt.clikt.parameters.types.outputStream
 import com.github.ajalt.clikt.parameters.types.path
 import de.learnlib.datastructure.pta.config.DefaultProcessingOrders
 import de.learnlib.datastructure.pta.config.DefaultProcessingOrders.LEX_ORDER
 import java.io.PrintWriter
 import kotlin.io.path.createParentDirectories
+import kotlin.random.Random
 import tools.aqua.hpm.automata.DFPTIOState
 import tools.aqua.hpm.automata.DFPTIOTransition
 import tools.aqua.hpm.automata.dfptioParser
+import tools.aqua.hpm.data.toLog
 import tools.aqua.hpm.data.toQuery
 import tools.aqua.hpm.data.toTimedIOTrace
+import tools.aqua.hpm.merge.SplitMode.EACH_FROM_START
+import tools.aqua.hpm.merge.SplitMode.EACH_NON_OVERLAPPING
+import tools.aqua.hpm.merge.SplitMode.ONLY_FIRST
 import tools.aqua.hpm.merge.selectAndMerge
 import tools.aqua.hpm.rtioalergia.RelaxedTimedIOAlergia
+import tools.aqua.hpm.traces.generateTraces
 import tools.aqua.hpm.util.ComparableUnit
 import tools.aqua.hpm.util.writeDot
 import tools.aqua.hpm.validation.computeBestTraceSimilarity
 import tools.aqua.hpm.validation.getViterbiPaths
+import tools.aqua.hpm.validation.hittingTimeDelta
 import tools.aqua.rereso.log.LogArchive
 import tools.aqua.rereso.log.importer.importSplitNibeData
 import tools.aqua.rereso.util.smartDecode
@@ -62,13 +71,51 @@ class SelectAndMerge : CliktCommand() {
           .path(mustExist = true, canBeDir = false, mustBeReadable = true)
           .required()
   val output by option("-o", "--output").path(canBeDir = false).required()
-  val events by option("-e", "--events").varargValues().required()
+  val events by option("-e", "--events").varargValues().default(emptyList())
   val splitEvent by option("-s", "--split-event").required()
-  val useOnlyFirst by option("-f", "--use-only-first").flag("-a", "--use-all")
+  val splitMode by
+      option()
+          .switch(
+              "-f" to ONLY_FIRST,
+              "--use-only-first" to ONLY_FIRST,
+              "-a" to EACH_FROM_START,
+              "--use-all-overlapping" to EACH_FROM_START,
+              "-n" to EACH_NON_OVERLAPPING,
+              "--use-all-non-overlapping" to EACH_NON_OVERLAPPING)
+          .default(EACH_NON_OVERLAPPING)
 
   override fun run() {
     val archive = input.smartDecode<LogArchive>()
-    val result = archive.selectAndMerge(events.toSet() + splitEvent, splitEvent, useOnlyFirst)
+    val result = archive.selectAndMerge(events.toSet() + splitEvent, splitEvent, splitMode)
+    output.createParentDirectories().smartEncode(result)
+  }
+}
+
+class GenerateTraces : CliktCommand() {
+  val dot by
+      option("-a", "--automaton")
+          .path(mustExist = true, canBeDir = false, mustBeReadable = true)
+          .required()
+  val output by option("-o", "--output").path(canBeDir = false).required()
+  val nTraces by option("-n", "--traces").int().default(1).check { it >= 1 }
+  val meanLength by option("-l", "--mean-length").double().default(100.0).check { it > 0 }
+  val lengthSD by option("-L", "--length-stddev").double().default(0.0).check { it >= 0 }
+  val seed by option("-s", "--seed").long().default(0)
+
+  override fun run() {
+    val data = dfptioParser.readModel(dot.toFile())
+    val automaton = data.model
+    val alphabet = data.alphabet
+
+    val random = Random(seed)
+
+    val result =
+        LogArchive(
+            "Traced from $dot",
+            automaton
+                .generateTraces(nTraces, meanLength, lengthSD, alphabet.single(), random)
+                .withIndex()
+                .mapTo(mutableSetOf()) { (idx, trace) -> trace.toLog().copy(name = "Trace $idx") })
     output.createParentDirectories().smartEncode(result)
   }
 }
@@ -122,7 +169,7 @@ class Learn : CliktCommand() {
   }
 }
 
-class Validate : CliktCommand() {
+class ValidateRevisionScore : CliktCommand() {
   val dot by
       option("-a", "--automaton")
           .path(mustExist = true, canBeDir = false, mustBeReadable = true)
@@ -134,6 +181,7 @@ class Validate : CliktCommand() {
   val output by option("-o", "--output").outputStream(truncateExisting = true).defaultStdout()
 
   val silent by option("-s", "--silent").flag("-v", "--verbose")
+  val parallel by option("-p", "--parallel").flag("--single-threaded")
   val frequencyWeight by
       option("-f", "--frequency-weight").double().default(0.5).check { it in 0.0..1.0 }
   val normalizeLikelihood by option("-n", "--normalize-likelihood").flag()
@@ -149,20 +197,88 @@ class Validate : CliktCommand() {
 
     val writer = PrintWriter(output, true)
     if (!silent) {
-      writer.println(listOf("LOG-NAME", "REVISION-SCORE", "PATH-LIKELINESS").joinToString(",\t"))
+      writer.println(listOf("LOG-NAME", "REVISION-SCORE", "PATH-LIKELINESS").joinToString(","))
     }
-    archive.logs.forEach { log ->
-      val trace = log.toTimedIOTrace(inputSymbol)
-      val revisionScore = automaton.computeBestTraceSimilarity(alphabet, trace, frequencyWeight)
-      val pathLikeliness =
-          automaton
-              .getViterbiPaths<DFPTIOState, String, DFPTIOTransition, String>(
-                  trace, normalizeLikelihood)
-              .maxOfOrNull { (_, score) -> score } ?: 0.0
-      writer.println(listOf(log.name, revisionScore, pathLikeliness).joinToString(",\t"))
+    archive.logs
+        .let { if (parallel) it.parallelStream() else it.stream() }
+        .map { log ->
+          val trace = log.toTimedIOTrace(inputSymbol)
+          val revisionScore = automaton.computeBestTraceSimilarity(alphabet, trace, frequencyWeight)
+          val pathLikeliness =
+              automaton
+                  .getViterbiPaths<DFPTIOState, String, DFPTIOTransition, String>(
+                      trace, normalizeLikelihood)
+                  .maxOfOrNull { (_, score) -> score } ?: 0.0
+          listOf(log.name, revisionScore, pathLikeliness).joinToString(",")
+        }
+        .forEachOrdered { writer.println(it) }
+  }
+}
+
+class ValidateHittingTimes : CliktCommand() {
+  val dot by
+      option("-a", "--automaton")
+          .path(mustExist = true, canBeDir = false, mustBeReadable = true)
+          .required()
+  val input by
+      option("-i", "--input")
+          .path(mustExist = true, canBeDir = false, mustBeReadable = true)
+          .required()
+  val output by option("-o", "--output").outputStream(truncateExisting = true).defaultStdout()
+
+  val silent by option("-s", "--silent").flag("-v", "--verbose")
+  val parallel by option("-p", "--parallel").flag("--single-threaded")
+  val events by option("-e", "--events").varargValues().required()
+  val sampleRate by option("-r", "--sample-rate").double().default(1.0).check { it > 0 && it <= 1 }
+  val maxSamples by option("-m", "--max-samples").int().default(Int.MAX_VALUE).check { it > 0 }
+
+  override fun run() {
+    val data = dfptioParser.readModel(dot.toFile())
+    val automaton = data.model
+    val alphabet = data.alphabet
+
+    val archive = input.smartDecode<LogArchive>()
+
+    val inputSymbol = alphabet.single()
+
+    val traces = archive.logs.map { it.toTimedIOTrace(inputSymbol) }
+    val result =
+        automaton.hittingTimeDelta(
+            traces, sampleRate, maxSamples, inputSymbol, events.toSet(), parallel)
+
+    val maxHittingInformation = result?.values?.maxOf { it.size } ?: 0
+    val writer = PrintWriter(output, true)
+    if (!silent) {
+      val line =
+          listOf("LOG-NAME", "AUTOMATON-USABLE") +
+              List(maxHittingInformation) { "PREDICTION-ERROR-$it" }
+      writer.println(line.joinToString(","))
+    }
+
+    if (result == null) {
+      archive.logs.forEach {
+        val line = listOf(it.name, "false")
+        writer.println(line.joinToString(","))
+      }
+    } else {
+      (archive.logs zip result.values).forEach { (log, hittingInformation) ->
+        val line =
+            listOf(log.name, "true") +
+                hittingInformation.map { it?.hittingTime?.toIsoString() ?: "DNF" } +
+                List(maxHittingInformation - hittingInformation.size) { "" }
+        writer.println(line.joinToString(","))
+      }
     }
   }
 }
 
 fun main(args: Array<String>) =
-    CLI().subcommands(ConvertFormat(), SelectAndMerge(), Learn(), Validate()).main(args)
+    CLI()
+        .subcommands(
+            ConvertFormat(),
+            SelectAndMerge(),
+            GenerateTraces(),
+            Learn(),
+            ValidateRevisionScore(),
+            ValidateHittingTimes())
+        .main(args)

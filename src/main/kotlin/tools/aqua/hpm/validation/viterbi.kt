@@ -54,5 +54,5 @@ fun <S, I, T, O> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S,
 }
 
 fun <S, I, T, O> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, O>
-    .getMostLikelyViterbiPath(word: TimedIOTrace<I, O>): SimpleTrace<S, T> =
-    getViterbiPaths(word).maxBy { (_, probability) -> probability }.first
+    .getMostLikelyViterbiPath(word: TimedIOTrace<I, O>): SimpleTrace<S, T>? =
+    getViterbiPaths(word).maxByOrNull { (_, probability) -> probability }?.first

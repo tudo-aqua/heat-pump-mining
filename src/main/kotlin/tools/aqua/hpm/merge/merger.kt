@@ -5,15 +5,24 @@
 package tools.aqua.hpm.merge
 
 import kotlinx.datetime.Instant
+import kotlinx.datetime.Instant.Companion.DISTANT_FUTURE
 import tools.aqua.hpm.data.hpmName
+import tools.aqua.hpm.merge.SplitMode.EACH_FROM_START
+import tools.aqua.hpm.merge.SplitMode.ONLY_FIRST
 import tools.aqua.rereso.log.Log
 import tools.aqua.rereso.log.LogArchive
 import tools.aqua.rereso.util.mapToSet
 
+enum class SplitMode {
+  ONLY_FIRST,
+  EACH_FROM_START,
+  EACH_NON_OVERLAPPING
+}
+
 fun LogArchive.selectAndMerge(
     includeEvents: Set<String>,
     useSplitFrom: String,
-    useOnlyFirst: Boolean
+    splitMode: SplitMode,
 ): LogArchive {
   require(useSplitFrom in includeEvents)
 
@@ -22,31 +31,33 @@ fun LogArchive.selectAndMerge(
   val events = logsWithName.mapToSet { (_, name) -> name.event }
   includeEvents.forEach { require(it in events) { "event $it missing from the log archive" } }
 
-  val initial =
-      selectAndMerge(
-          includeEvents,
-          0,
-          logsWithName
-              .single { (_, name) -> name.event == useSplitFrom && name.changePointSplit == 0 }
-              .first
-              .epoch!!)
+  val epochs =
+      logsWithName
+          .filter { (_, name) -> name.event == useSplitFrom }
+          .map { (log, _) -> log.epoch!! } + DISTANT_FUTURE
 
-  val others =
-      if (!useOnlyFirst) {
-        logsWithName
-            .filter { (_, name) -> name.event == useSplitFrom && name.changePointSplit > 0 }
-            .map { (log, name) ->
-              selectAndMerge(includeEvents, name.changePointSplit, log.epoch!!)
-            }
-      } else emptyList()
-
-  return LogArchive("$name (merged)", setOf(initial) + others)
+  return if (splitMode == ONLY_FIRST) {
+    val log = selectAndMerge(includeEvents, "all", epochs.first(), DISTANT_FUTURE)
+    LogArchive("$name (only first)", setOf(log))
+  } else {
+    val logs =
+        epochs.zipWithNext().withIndex().mapTo(mutableSetOf()) { (idx, range) ->
+          val (epoch, end) = range
+          selectAndMerge(
+              includeEvents,
+              idx.toString(),
+              epoch,
+              if (splitMode == EACH_FROM_START) DISTANT_FUTURE else end)
+        }
+    LogArchive("$name (merged)", logs)
+  }
 }
 
 fun LogArchive.selectAndMerge(
     includeEvents: Set<String>,
-    changePointSplit: Int,
+    changePointSplit: String,
     epoch: Instant,
+    end: Instant
 ): Log {
 
   val logsWithName = logs.map { it to it.hpmName }
@@ -58,7 +69,7 @@ fun LogArchive.selectAndMerge(
       includedLogs
           .flatMap { (log, name) ->
             log.entries
-                .filter { it.start(log.epoch!!)!! >= epoch }
+                .filter { it.start(log.epoch!!)!! in epoch..<end }
                 .map {
                   it.copy(
                       value = "${if (name.isContinuous) "c" else "d"}/${it.value}",
@@ -70,11 +81,10 @@ fun LogArchive.selectAndMerge(
   val firstName = includedLogs.first().second
   val eventsMergedName =
       includedLogs
-          .map { (_, name) -> name.eventName }
-          .toSet()
+          .mapTo(mutableSetOf()) { (_, name) -> name.eventName }
           .toList()
           .sorted()
           .joinToString("+", "[", "]")
   val mergedName = "${firstName.source}/${firstName.processing}/$eventsMergedName/$changePointSplit"
-  return Log(mergedName, merged)
+  return Log(mergedName, merged, epoch = epoch)
 }

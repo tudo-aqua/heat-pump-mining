@@ -1,0 +1,16 @@
+// SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+//
+// SPDX-License-Identifier: Apache-2.0
+digraph g {
+	s0 [label="a / t=1m"];
+	s1 [label="b / t=1m"];
+    s2 [label="a / t=10m"];
+    s3 [label="c / t=10m"];
+	s0 -> s1 [label="- / n=1 / p=1"];
+    s1 -> s2 [label="- / n=1 / p=1"];
+    s2 -> s3 [label="- / n=1 / p=1"];
+    s3 -> s0 [label="- / n=1 / p=1"];
+
+    __start0 [label="" shape="none" width="0" height="0"];
+    __start0 -> s0;
+}

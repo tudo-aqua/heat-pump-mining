@@ -56,6 +56,7 @@ open class FrequencyProbabilisticTimedAutomatonVisualizationHelper<
     AutomatonVisualizationHelper<S, I, T, A>(automaton) {
 
   override fun getNodeProperties(node: S, properties: MutableMap<String, String>): Boolean {
+    super.getNodeProperties(node, properties)
     val output = automaton.getStateOutput(node)
     val exitTime = automaton.getExitTime(node)
     properties[LABEL] = "$output / t=$exitTime"
@@ -68,6 +69,7 @@ open class FrequencyProbabilisticTimedAutomatonVisualizationHelper<
       tgt: S,
       properties: MutableMap<String, String>
   ): Boolean {
+    super.getEdgeProperties(src, edge, tgt, properties)
     val freq = automaton.getTransitionFrequency(edge.transition)
     val prob = automaton.getTransitionProbability(edge.transition)
     properties[LABEL] = "${edge.input} / n=$freq / p=$prob"
@@ -105,9 +107,6 @@ interface DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, 
 interface MutableDeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, O> :
     DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, O>,
     MutableFrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, O> {
-
-  override fun getInitialStates(): Set<S> =
-      super<DeterministicFrequencyProbabilisticTimedInputOutputAutomaton>.getInitialStates()
 
   override fun setInitial(state: S, initial: Boolean) {
     if (initial) {
