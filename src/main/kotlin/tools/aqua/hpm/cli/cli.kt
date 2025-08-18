@@ -21,24 +21,43 @@ import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.long
 import com.github.ajalt.clikt.parameters.types.outputStream
 import com.github.ajalt.clikt.parameters.types.path
+import com.github.doyaaaaaken.kotlincsv.dsl.csvWriter
 import de.learnlib.datastructure.pta.config.DefaultProcessingOrders
 import de.learnlib.datastructure.pta.config.DefaultProcessingOrders.LEX_ORDER
-import java.io.PrintWriter
+import java.util.Optional
+import java.util.stream.Collectors.toList
 import kotlin.io.path.createParentDirectories
+import kotlin.io.path.div
+import kotlin.io.path.name
+import kotlin.jvm.optionals.getOrNull
 import kotlin.random.Random
+import kotlin.time.DurationUnit.DAYS
+import kotlin.time.DurationUnit.HOURS
+import kotlin.time.DurationUnit.MICROSECONDS
+import kotlin.time.DurationUnit.MILLISECONDS
+import kotlin.time.DurationUnit.MINUTES
+import kotlin.time.DurationUnit.NANOSECONDS
+import kotlin.time.DurationUnit.SECONDS
 import tools.aqua.hpm.automata.DFPTIOState
 import tools.aqua.hpm.automata.DFPTIOTransition
 import tools.aqua.hpm.automata.dfptioParser
+import tools.aqua.hpm.data.HittingPredictionList
+import tools.aqua.hpm.data.HittingPredictionResult
+import tools.aqua.hpm.data.RevisionScoreList
+import tools.aqua.hpm.data.RevisionScoreResult
 import tools.aqua.hpm.data.toLog
 import tools.aqua.hpm.data.toQuery
+import tools.aqua.hpm.data.toRows
 import tools.aqua.hpm.data.toTimedIOTrace
 import tools.aqua.hpm.merge.SplitMode.EACH_FROM_START
 import tools.aqua.hpm.merge.SplitMode.EACH_NON_OVERLAPPING
 import tools.aqua.hpm.merge.SplitMode.ONLY_FIRST
 import tools.aqua.hpm.merge.selectAndMerge
+import tools.aqua.hpm.merge.validationSplit
 import tools.aqua.hpm.rtioalergia.RelaxedTimedIOAlergia
 import tools.aqua.hpm.traces.generateTraces
 import tools.aqua.hpm.util.ComparableUnit
+import tools.aqua.hpm.util.summarizeResults
 import tools.aqua.hpm.util.writeDot
 import tools.aqua.hpm.validation.computeBestTraceSimilarity
 import tools.aqua.hpm.validation.getViterbiPaths
@@ -88,6 +107,40 @@ class SelectAndMerge : CliktCommand() {
     val archive = input.smartDecode<LogArchive>()
     val result = archive.selectAndMerge(events.toSet() + splitEvent, splitEvent, splitMode)
     output.createParentDirectories().smartEncode(result)
+  }
+}
+
+class TVSplit : CliktCommand("tv-split") {
+  val input by
+      option("-i", "--input")
+          .path(mustExist = true, canBeDir = false, mustBeReadable = true)
+          .required()
+  val output by
+      option("-o", "--output-template").path(canBeDir = false).required().check {
+        it.name.contains("{round}") && it.name.contains("{set}")
+      }
+  val rounds by option("-r", "--rounds").int().default(1)
+  val validationShare by
+      option("-v", "--validation-share").double().default(0.5).check { it > 0 && it < 1 }
+  val seed by option("-s", "--seed").long().default(0)
+
+  override fun run() {
+    val archive = input.smartDecode<LogArchive>()
+    val result = archive.validationSplit(rounds, validationShare, seed)
+    result.withIndex().forEach { (round, tv) ->
+      val roundName = output.name.replace("{round}", "$round")
+      val (training, validation) = tv
+      training.forEach {
+        output
+            .resolveSibling(roundName.replace("{set}", "training-${it.logs.size}"))
+            .createParentDirectories()
+            .smartEncode(it)
+      }
+      output
+          .resolveSibling(roundName.replace("{set}", "validation"))
+          .createParentDirectories()
+          .smartEncode(validation)
+    }
   }
 }
 
@@ -180,7 +233,6 @@ class ValidateRevisionScore : CliktCommand() {
           .required()
   val output by option("-o", "--output").outputStream(truncateExisting = true).defaultStdout()
 
-  val silent by option("-s", "--silent").flag("-v", "--verbose")
   val parallel by option("-p", "--parallel").flag("--single-threaded")
   val frequencyWeight by
       option("-f", "--frequency-weight").double().default(0.5).check { it in 0.0..1.0 }
@@ -195,23 +247,24 @@ class ValidateRevisionScore : CliktCommand() {
 
     val inputSymbol = alphabet.single()
 
-    val writer = PrintWriter(output, true)
-    if (!silent) {
-      writer.println(listOf("LOG-NAME", "REVISION-SCORE", "PATH-LIKELINESS").joinToString(","))
-    }
-    archive.logs
-        .let { if (parallel) it.parallelStream() else it.stream() }
-        .map { log ->
-          val trace = log.toTimedIOTrace(inputSymbol)
-          val revisionScore = automaton.computeBestTraceSimilarity(alphabet, trace, frequencyWeight)
-          val pathLikeliness =
-              automaton
-                  .getViterbiPaths<DFPTIOState, String, DFPTIOTransition, String>(
-                      trace, normalizeLikelihood)
-                  .maxOfOrNull { (_, score) -> score } ?: 0.0
-          listOf(log.name, revisionScore, pathLikeliness).joinToString(",")
-        }
-        .forEachOrdered { writer.println(it) }
+    val result =
+        archive.logs
+            .let { if (parallel) it.parallelStream() else it.stream() }
+            .map { log ->
+              val trace = log.toTimedIOTrace(inputSymbol)
+              val revisionScore =
+                  automaton.computeBestTraceSimilarity(alphabet, trace, frequencyWeight)
+              val pathLikeliness =
+                  automaton
+                      .getViterbiPaths<DFPTIOState, String, DFPTIOTransition, String>(
+                          trace, normalizeLikelihood)
+                      .maxOfOrNull { (_, score) -> score } ?: 0.0
+              RevisionScoreResult("${log.name}", revisionScore, pathLikeliness)
+            }
+            .collect(toList())
+            .let(::RevisionScoreList)
+
+    csvWriter { lineTerminator = "\n" }.open(output) { writeRows(result.toRows()) }
   }
 }
 
@@ -226,11 +279,9 @@ class ValidateHittingTimes : CliktCommand() {
           .required()
   val output by option("-o", "--output").outputStream(truncateExisting = true).defaultStdout()
 
-  val silent by option("-s", "--silent").flag("-v", "--verbose")
   val parallel by option("-p", "--parallel").flag("--single-threaded")
   val events by option("-e", "--events").varargValues().required()
-  val sampleRate by option("-r", "--sample-rate").double().default(1.0).check { it > 0 && it <= 1 }
-  val maxSamples by option("-m", "--max-samples").int().default(Int.MAX_VALUE).check { it > 0 }
+  val samples by option("-s", "--samples").int().check { it > 0 }
 
   override fun run() {
     val data = dfptioParser.readModel(dot.toFile())
@@ -242,33 +293,53 @@ class ValidateHittingTimes : CliktCommand() {
     val inputSymbol = alphabet.single()
 
     val traces = archive.logs.map { it.toTimedIOTrace(inputSymbol) }
+    val deltas = automaton.hittingTimeDelta(traces, samples, inputSymbol, events.toSet(), parallel)
+
     val result =
-        automaton.hittingTimeDelta(
-            traces, sampleRate, maxSamples, inputSymbol, events.toSet(), parallel)
+        if (deltas == null) {
+              archive.logs.map { HittingPredictionResult("${it.name}", false, emptyList()) }
+            } else {
+              (archive.logs zip deltas.values).map { (log, hittingInformation) ->
+                HittingPredictionResult(
+                    "${log.name}", true, hittingInformation.map { it?.hittingTime })
+              }
+            }
+            .let(::HittingPredictionList)
 
-    val maxHittingInformation = result?.values?.maxOf { it.size } ?: 0
-    val writer = PrintWriter(output, true)
-    if (!silent) {
-      val line =
-          listOf("LOG-NAME", "AUTOMATON-USABLE") +
-              List(maxHittingInformation) { "PREDICTION-ERROR-$it" }
-      writer.println(line.joinToString(","))
-    }
+    csvWriter { lineTerminator = "\n" }.open(output) { writeRows(result.toRows()) }
+  }
+}
 
-    if (result == null) {
-      archive.logs.forEach {
-        val line = listOf(it.name, "false")
-        writer.println(line.joinToString(","))
-      }
-    } else {
-      (archive.logs zip result.values).forEach { (log, hittingInformation) ->
-        val line =
-            listOf(log.name, "true") +
-                hittingInformation.map { it?.hittingTime?.toIsoString() ?: "DNF" } +
-                List(maxHittingInformation - hittingInformation.size) { "" }
-        writer.println(line.joinToString(","))
-      }
-    }
+class SummarizeResults : CliktCommand() {
+  val basedir by option("-d", "--directory").path(mustExist = true, canBeFile = false).required()
+  val cases by option("-c", "--cases").varargValues().required()
+  val rounds by option("-r", "--rounds").int().required()
+  val setups by option("-s", "--setups").varargValues().required()
+  val learningSizes by option("-l", "--learning-sizes").int().varargValues().required()
+
+  val timeUnit by
+      option()
+          .switch(
+              "--iso-duration" to Optional.empty(),
+              "--nanoseconds" to Optional.of(NANOSECONDS),
+              "--microseconds" to Optional.of(MICROSECONDS),
+              "--milliseconds" to Optional.of(MILLISECONDS),
+              "--seconds" to Optional.of(SECONDS),
+              "--minutes" to Optional.of(MINUTES),
+              "--hours" to Optional.of(HOURS),
+              "--days" to Optional.of(DAYS),
+          )
+          .default(Optional.empty())
+
+  val output by option("-o", "--output").outputStream(truncateExisting = true).defaultStdout()
+
+  override fun run() {
+    csvWriter { lineTerminator = "\n" }
+        .open(output) {
+          writeRows(
+              summarizeResults(basedir, cases, rounds, setups, learningSizes)
+                  .toRows(timeUnit.getOrNull()))
+        }
   }
 }
 
@@ -277,8 +348,10 @@ fun main(args: Array<String>) =
         .subcommands(
             ConvertFormat(),
             SelectAndMerge(),
+            TVSplit(),
             GenerateTraces(),
             Learn(),
             ValidateRevisionScore(),
-            ValidateHittingTimes())
+            ValidateHittingTimes(),
+            SummarizeResults())
         .main(args)

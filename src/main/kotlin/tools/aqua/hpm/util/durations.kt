@@ -29,6 +29,12 @@ fun Collection<Duration>.averageOrNull(): Duration? = computeAdditiveOrNull(::me
 fun Collection<Duration>.average(): Duration =
     checkNotNull(averageOrNull()) { "collection must not be empty" }
 
+fun Collection<Duration>.standardDeviationOrNull(): Duration? =
+    varianceOrNull()?.toBigIntegerNanoseconds()?.sqrt()?.toDouble()?.nanoseconds
+
+fun Collection<Duration>.standardDeviation(): Duration =
+    checkNotNull(standardDeviationOrNull()) { "collection must not be empty" }
+
 fun Collection<Duration>.varianceOrNull(): Duration? = computeAdditiveOrNull(::variance)
 
 fun Collection<Duration>.variance(): Duration =

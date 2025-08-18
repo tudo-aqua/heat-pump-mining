@@ -6,6 +6,8 @@ package tools.aqua.hpm.validation
 
 import kotlin.math.exp
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.ZERO
+import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
 import tools.aqua.hpm.automata.DeterministicFrequencyProbabilisticTimedInputOutputAutomaton
 
@@ -19,8 +21,11 @@ import tools.aqua.hpm.automata.DeterministicFrequencyProbabilisticTimedInputOutp
  */
 fun <S, T> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S, *, T, *>
     .getTransitionLikelihood(state: S, transition: T, time: Duration): Double =
-    1.seconds / getExitTime(state) * getNonNormalizedTransitionLikelihood(state, transition, time)
+    (1.seconds / getExitTime(state).asSafe()) *
+        getNonNormalizedTransitionLikelihood(state, transition, time)
 
 fun <S, T> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S, *, T, *>
     .getNonNormalizedTransitionLikelihood(state: S, transition: T, time: Duration): Double =
-    exp(-time / getExitTime(state)) * getTransitionProbability(transition)
+    exp(-(time.asSafe()) / getExitTime(state).asSafe()) * getTransitionProbability(transition)
+
+private fun Duration.asSafe(): Duration = if (this == ZERO) 1.nanoseconds else this

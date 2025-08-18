@@ -9,16 +9,12 @@ From: ubuntu:rolling
   build/jpackage/heat-pump-mining_0.0.0_amd64.deb /
   scripts/evaluate-from-database.sh /usr/local/bin/evaluate-db
   scripts/evaluate-from-automaton.sh /usr/local/bin/evaluate-dot
-  scripts/summarize.py /usr/local/bin/summarize
+  scripts/evaluate-from-loop.sh /usr/local/bin/evaluate-loop
+  scripts/evaluate-from-toy-heat-pump.sh /usr/local/bin/evaluate-toy
+  scripts/learn.sh /usr/local/bin/learn
 
 %post
   export DEBIAN_FRONTEND=noninteractive
-  apt-get update
   apt-get install -y --no-install-recommends ./heat-pump-mining_0.0.0_amd64.deb
-  apt-get install -y --no-install-recommends ca-certificates python3 python3-isodate wget zstd
-  rm -rf /var/lib/apt/lists
-
-  wget https://github.com/jqlang/jq/releases/download/jq-1.8.1/jq-linux-amd64 -O /usr/local/bin/jq
-  chmod +x /usr/local/bin/jq
 
   ln -s /opt/heat-pump-mining/bin/heat-pump-mining /usr/local/bin

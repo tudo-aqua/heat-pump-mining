@@ -1,0 +1,104 @@
+// SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+//
+// SPDX-License-Identifier: CC-BY-4.0
+digraph g {
+  m_h1 [
+    label="heating / t=15m";
+  ];
+  m_hhw [
+    label="heating_and_hot_water / t=10m";
+  ];
+  m_h2 [
+    label="heating / t=15m";
+  ];
+  m_s [
+    label="standby / t=30m";
+  ];
+  m_hw [
+    label="hot_water / t=10m";
+  ];
+  d_s [
+    label="standby / t=6h";
+  ];
+  d_d [
+    label="defrost / t=1h";
+  ];
+  e_h [
+    label="heating / t=1h";
+  ];
+  e_s [
+    label="standby / t=1h";
+  ];
+  e_hhw [
+    label="heating_and_hot_water / t=5m";
+  ];
+  e_hw [
+    label="hot_water / t=1m";
+  ];
+  n_s [
+    label="standby / t=10h";
+  ];
+  // weekday morning routine
+  m_h1 -> m_hhw [
+    label="- / n=5 / p=0.71";
+  ];
+  m_hhw -> m_h2 [
+    label="- / n=1 / p=1";
+  ];
+  m_h2 -> d_s [
+    label="- / n=1 / p=1";
+  ];
+  // weekend morning routine
+  m_h1 -> m_s [
+    label="- / n=2 / p=0.29";
+  ];
+  m_s -> m_hw [
+    label="- / n=1 / p=1";
+  ];
+  m_hw -> d_s [
+    label="- / n=1 / p=1";
+  ];
+  // daytime defrosting
+  d_s -> d_d [
+    label="- / n=1 / p=0.05";
+  ];
+  d_d -> d_s [
+    label="- / n=1 / p=1";
+  ];
+  d_s -> e_h [
+    label="- / n=19 / p=0.95";
+  ];
+  // evening activities
+  e_h -> e_s [
+    label="- / n=4 / p=0.4";
+  ];
+  e_h -> e_hhw [
+    label="- / n=2 / p=0.2";
+  ];
+  e_h -> n_s [
+    label="- / n=4 / p=0.4";
+  ];
+  e_s -> e_h [
+    label="- / n=8 / p=0.8";
+  ];
+  e_s -> e_hw [
+    label="- / n=2 / p=0.2";
+  ];
+  e_hw -> e_s [
+    label="- / n=9 / p=0.9";
+  ];
+  e_hw -> e_hhw [
+    label="- / n=1 / p=0.1";
+  ];
+  e_hhw -> e_h [
+    label="- / n=9 / p=0.9";
+  ];
+  e_hhw -> e_hw [
+    label="- / n=1 / p=0.1";
+  ];
+  // night
+  n_s -> m_h1 [
+    label="- / n=1 / p=1";
+  ];
+  __start0 -> m_h1;
+}

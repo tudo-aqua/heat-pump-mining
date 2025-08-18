@@ -23,10 +23,39 @@ fun <T> Collection<T>.takeEvenlySpaced(n: Int): List<T> {
     this@takeEvenlySpaced.forEach {
       if (willTake >= threshold) {
         this += it
-        willTake -= (threshold - n)
-      } else {
-        willTake += n
+        willTake -= threshold
       }
+      willTake += n
     }
   }
+}
+
+operator fun <T> List<T>.component6() = get(5)
+
+operator fun <T> List<T>.component7() = get(6)
+
+operator fun <T> List<T>.component8() = get(7)
+
+operator fun <T> List<T>.component9() = get(8)
+
+operator fun <T> List<T>.component10() = get(9)
+
+operator fun <T> List<T>.component11() = get(10)
+
+operator fun <T> List<T>.component12() = get(11)
+
+operator fun <T> List<T>.component13() = get(12)
+
+operator fun <T> List<T>.component14() = get(13)
+
+operator fun <T> List<T>.component15() = get(14)
+
+fun <T> Iterable<T>.allSame(): Boolean {
+  val iter = iterator()
+  if (!iter.hasNext()) return true
+  val value = iter.next()
+  for (e in iter) {
+    if (e != value) return false
+  }
+  return true
 }

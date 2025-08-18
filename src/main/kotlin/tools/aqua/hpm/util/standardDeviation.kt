@@ -1,0 +1,13 @@
+// SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+//
+// SPDX-License-Identifier: Apache-2.0
+
+package tools.aqua.hpm.util
+
+import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation
+
+private val STANDARD_DEVIATION = StandardDeviation()
+
+fun standardDeviation(values: DoubleArray): Double {
+  return STANDARD_DEVIATION.evaluate(values)
+}

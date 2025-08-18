@@ -15,6 +15,7 @@ import org.gradle.api.attributes.Category.DOCUMENTATION
 import org.gradle.api.attributes.DocsType.DOCS_TYPE_ATTRIBUTE
 import org.gradle.api.attributes.Usage.JAVA_RUNTIME
 import org.gradle.api.attributes.Usage.USAGE_ATTRIBUTE
+import org.gradle.api.file.DuplicatesStrategy.INCLUDE
 import org.gradle.api.plugins.BasePlugin.BUILD_GROUP
 import org.gradle.api.tasks.testing.logging.TestLogEvent.FAILED
 import org.gradle.api.tasks.testing.logging.TestLogEvent.PASSED
@@ -83,6 +84,7 @@ repositories { mavenCentral() }
 dependencies {
   implementation(libs.clikt)
   implementation(libs.commons.math)
+  implementation(libs.csv)
   implementation(libs.serialization.json)
   implementation(libs.learnlib)
   implementation(libs.rereso)
@@ -122,6 +124,14 @@ spotless {
   val apache20 = ReuseHeader(APACHE_2_0, copyright)
   val ccBy40 = ReuseHeader(CC_BY_4_0, copyright)
 
+  format("graphviz") {
+    target("examples/*.dot")
+    licenseHeader(ccBy40.asCppComments(), "(strict)? *(digraph|graph)")
+    prettier(mapOf("prettier-plugin-dot" to libs.versions.prettier.dot.get()))
+        .npmInstallCache()
+        .nodeExecutable(computeNodeExec(node, computeNodeDir(node)).get())
+        .config(mapOf("parser" to "dot-parser", "printWidth" to 100))
+  }
   kotlin {
     licenseHeader(apache20.asCppComments())
     ktfmt()
@@ -169,7 +179,7 @@ spotless {
                 "printWidth" to 100,
             ))
   }
-  format("sh") {
+  shell {
     target("scripts/*.sh")
     licenseHeader(apache20.asHashmarkComments(), """[.a-zA-Z0-9/*]+""").skipLinesMatching("^#!")
     trimTrailingWhitespace()
@@ -254,6 +264,8 @@ tasks.test {
 
 application { mainClass = "tools.aqua.hpm.cli.CliKt" }
 
+tasks.installDist { duplicatesStrategy = INCLUDE }
+
 runtime {
   jpackage { appVersion = version.toString().substringBefore('-') }
   modules = listOf("java.base", "java.logging")
@@ -262,6 +274,7 @@ runtime {
 
 val singularityImage by
     tasks.registering(SingularityBuildTask::class) {
+      group = "distribution"
       inputs.dir(tasks.jpackage.map { it.jpackageData.installerOutputDirOrDefault })
       specification = file("hpm.def")
       container = layout.buildDirectory.file("singularity/hpm.sif")
