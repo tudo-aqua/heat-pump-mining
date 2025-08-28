@@ -26,7 +26,7 @@ The project can be used via Gradle:
 Additionally, executable bundles can be built:
 
 ```shell
-./gradlew application  # ZIP with dependencies
+./gradlew distZip  # ZIP with dependencies
 ./gradlew jpackage  # Installer with JAR, needs platform build tools
 ./gradlew singularityImage  # Singularity image, needs singularity and Linux platform
 ```
