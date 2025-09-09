@@ -268,6 +268,7 @@ tasks {
   distTar { duplicatesStrategy = EXCLUDE }
   distZip { duplicatesStrategy = EXCLUDE }
   installDist { duplicatesStrategy = EXCLUDE }
+  jpackageImage { dependsOn(runtime) }
 }
 
 runtime {

@@ -4,6 +4,9 @@
 
 name: CI/CD
 
+env:
+  SINGULARITY_VERSION: 4.3.3
+
 on:
   push:
     branches:
@@ -24,5 +27,34 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+      - run: |
+          DEBIAN_FRONTEND=noninteractive sudo apt-get install -y fakeroot
+          wget https://github.com/sylabs/singularity/releases/download/v$SINGULARITY_VERSION/singularity-ce_$SINGULARITY_VERSION-$(lsb_release -cs)_amd64.deb
+          sudo dpkg -i singularity-ce_$SINGULARITY_VERSION-$(lsb_release -cs)_amd64.deb || true
+          DEBIAN_FRONTEND=noninteractive sudo apt-get install -fy
       - uses: gradle/actions/setup-gradle@v4
-      - run: ./gradlew build
+      - run: ./gradlew build kdocJar javadocJar sourcesJar runtimeZip singularityImage
+      - uses: actions/upload-artifact@v4
+        with:
+          name: JARs
+          path: build/libs/*.jar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Distributions
+          path: |
+            build/distributions/*.tar
+            build/distributions/*.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Image
+          path: build/image.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Installers
+          path: |
+            build/jpackage/*.deb
+            build/jpackage/*.rpm
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Singluarity
+          path: build/singularity/*.sif
