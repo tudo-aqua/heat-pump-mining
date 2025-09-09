@@ -75,7 +75,7 @@ fun <S, I, T, O> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S,
                 }
 
             fTestSimilarity(
-                getExitTime(state),
+                getExitTimes(state).average(),
                 totalFrequency,
                 observedTimings[state]?.average() ?: Duration.ZERO,
                 observedTimings[state]?.size ?: 0)

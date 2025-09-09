@@ -14,9 +14,10 @@ val dfptioParser =
     DOTMutableAutomatonParser(
         { DefaultDeterministicFrequencyProbabilisticTimedInputOutputAutomaton() },
         { attr ->
-          val (output, time) = attr.getValue(LABEL).split(" / ")
-          val exitTime = Duration.parse(time.removePrefix("t="))
-          output.withExitTime(exitTime)
+          val (output, times) = attr.getValue(LABEL).split(" / ")
+          val exitTimes =
+              times.removePrefix("t=[").removeSuffix("]").split(", ").map { Duration.parse(it) }
+          output.withExitTimes(exitTimes)
         },
         { attr ->
           val (input, freq, prob) = attr.getValue(LABEL).split(" / ")

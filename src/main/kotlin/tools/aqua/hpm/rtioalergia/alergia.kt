@@ -445,7 +445,8 @@ class RTIOAlergiaMergedAutomaton<I : Comparable<I>, O : Comparable<O>>(
 
   override fun getStateOutput(state: TimedFrequencyNode<I, O, *>): O = state.output
 
-  override fun getExitTime(state: TimedFrequencyNode<I, O, *>): Duration = state.averageTiming
+  override fun getExitTimes(state: TimedFrequencyNode<I, O, *>): Collection<Duration> =
+      state.timings
 
   override fun getTransitions(
       state: TimedFrequencyNode<I, O, *>,

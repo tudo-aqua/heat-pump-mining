@@ -6,6 +6,7 @@ package tools.aqua.hpm.util
 
 import kotlin.invoke
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.ZERO
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.InstanceOfAssertFactories.COLLECTION
 import org.assertj.core.api.InstanceOfAssertFactories.FLOAT
@@ -66,15 +67,20 @@ internal fun <S : TimedFrequencyNode<I, O, *>, I, O> S.assertStateData(
         DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<
             S, I, FrequencyTransition<S, I>, O>,
     output: O,
-    exitTime: Duration,
+    exitTime: Duration?,
     timings: Collection<Duration>,
     nTransitions: Int
 ) {
   assertThat(this).extracting { it.output }.isEqualTo(output)
   assertThat(this).extracting { automaton.getStateOutput(it) }.isEqualTo(output)
 
-  automaton.getExitTime(this).assertCloseTo(exitTime)
-  averageTiming.assertCloseTo(exitTime)
+  if (exitTime == null) {
+    assertThat(automaton.getExitTimes(this).averageOrNull()).isNull()
+    assertThat(averageTiming).isEqualTo(ZERO)
+  } else {
+    automaton.getExitTimes(this).average().assertCloseTo(exitTime)
+    averageTiming.assertCloseTo(exitTime)
+  }
 
   assertThat(this)
       .extracting { it.timings }
@@ -115,13 +121,13 @@ internal data class KnownState<I, O>(val level: Int, override val output: O) : S
 
 internal data class State<I, O>(
     override val output: O,
-    val exitTime: Duration,
+    val exitTime: Duration?,
     val timings: Collection<Duration>,
     val transitions: List<Transition<I, O>>
 ) : StateRef<I, O> {
   constructor(
       output: O,
-      exitTime: Duration,
+      exitTime: Duration?,
       timings: Collection<Duration>,
       vararg transitions: Transition<I, O>
   ) : this(output, exitTime, timings, transitions.asList())

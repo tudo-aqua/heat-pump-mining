@@ -51,7 +51,7 @@ class TTAlergiaMergedAutomatonTest {
                             "j",
                             3.seconds,
                             listOf(3.seconds),
-                            Transition("c", 1, 1.0f, State("k", 0.seconds, emptyList()))))))))
+                            Transition("c", 1, 1.0f, State("k", null, emptyList()))))))))
   }
 
   @Test
@@ -99,12 +99,12 @@ class TTAlergiaMergedAutomatonTest {
                             "j",
                             3.seconds,
                             List(2) { 3.seconds },
-                            Transition("c", 1, 1.0f, State("k", 0.seconds, emptyList())),
+                            Transition("c", 1, 1.0f, State("k", null, emptyList())),
                             Transition(
                                 "d",
                                 1,
                                 1.0f,
-                                State("l", 0.seconds, emptyList()),
+                                State("l", null, emptyList()),
                             )))))))
   }
 

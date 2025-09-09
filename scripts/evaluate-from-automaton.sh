@@ -6,8 +6,8 @@
 set -euxo pipefail
 
 # generate data
-heat-pump-mining generate-traces -a "$1.dot" -o "$1-0-training-1.json.zst" -n "$3" -l "$4"
-heat-pump-mining generate-traces -a "$1.dot" -o "$1-0-validation.json.zst" -n "$5" -l "$6"
+heat-pump-mining generate-traces -a "$1.dot" -o "$1-0-training-1.json.zst" -n "$3" -l "$4" --normal-distribution --milliseconds
+heat-pump-mining generate-traces -a "$1.dot" -o "$1-0-validation.json.zst" -n "$5" -l "$6" --normal-distribution --milliseconds
 
 # learn
 learn "$1" 0 1

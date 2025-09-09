@@ -5,6 +5,7 @@
 package tools.aqua.hpm.data
 
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.ZERO
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 import net.automatalib.automaton.Automaton
@@ -24,6 +25,7 @@ import tools.aqua.hpm.util.component8
 import tools.aqua.hpm.util.component9
 import tools.aqua.hpm.util.countTransitions
 import tools.aqua.hpm.util.standardDeviation
+import tools.aqua.hpm.util.standardDeviationOrNull
 import tools.aqua.hpm.util.subListFrom
 import tools.aqua.rereso.util.implies
 
@@ -157,7 +159,7 @@ data class AverageWithStddev<T>(val average: T, val standardDeviation: T) {
         durations
             .toList()
             .ifEmpty { null }
-            ?.let { AverageWithStddev(it.average(), it.standardDeviation()) }
+            ?.let { AverageWithStddev(it.average(), it.standardDeviationOrNull() ?: ZERO) }
 
     fun fromDurations(durations: Iterable<Duration>): AverageWithStddev<Duration> =
         requireNotNull(fromDurationsOrNull(durations))

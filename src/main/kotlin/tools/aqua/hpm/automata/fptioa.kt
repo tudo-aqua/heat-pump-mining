@@ -20,12 +20,12 @@ import net.automatalib.visualization.VisualizationHelper.CommonAttrs.LABEL
 interface FrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, O> :
     UniversalAutomaton<S, I, T, TimedOutput<O>, FrequencyAndProbability>,
     Frequency<T>,
-    ExitTime<S>,
+    ExitTimes<S>,
     Probabilistic<T>,
     StateOutput<S, O> {
 
   override fun getStateProperty(state: S): TimedOutput<O> =
-      getStateOutput(state).withExitTime(getExitTime(state))
+      getStateOutput(state).withExitTimes(getExitTimes(state))
 
   override fun getTransitionProperty(transition: T): FrequencyAndProbability =
       getTransitionFrequency(transition).withProbability(getTransitionProbability(transition))
@@ -58,8 +58,8 @@ open class FrequencyProbabilisticTimedAutomatonVisualizationHelper<
   override fun getNodeProperties(node: S, properties: MutableMap<String, String>): Boolean {
     super.getNodeProperties(node, properties)
     val output = automaton.getStateOutput(node)
-    val exitTime = automaton.getExitTime(node)
-    properties[LABEL] = "$output / t=$exitTime"
+    val exitTimes = automaton.getExitTimes(node)
+    properties[LABEL] = "$output / t=${exitTimes.joinToString(", ", "[", "]")}"
     return true
   }
 
@@ -86,7 +86,7 @@ interface MutableFrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, O> :
     MutableStateOutput<S, O> {
   override fun setStateProperty(state: S, property: TimedOutput<O>) {
     setStateOutput(state, property.output)
-    setExitTime(state, property.time)
+    setExitTimes(state, property.times)
   }
 
   override fun setTransitionProperty(transition: T, property: FrequencyAndProbability) {

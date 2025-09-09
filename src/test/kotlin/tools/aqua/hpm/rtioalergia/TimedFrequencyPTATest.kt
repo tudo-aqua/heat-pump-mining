@@ -50,7 +50,7 @@ class TimedFrequencyPTATest {
                             Unit,
                             3.seconds,
                             listOf(3.seconds),
-                            Transition("c", 1, 1.0f, State(Unit, 0.seconds, emptyList()))))))))
+                            Transition("c", 1, 1.0f, State(Unit, null, emptyList()))))))))
   }
 
   @Test
@@ -85,7 +85,7 @@ class TimedFrequencyPTATest {
                             "b",
                             3.seconds,
                             listOf(3.seconds),
-                            Transition(Unit, 1, 1.0f, State("c", 0.seconds, emptyList()))))))))
+                            Transition(Unit, 1, 1.0f, State("c", null, emptyList()))))))))
   }
 
   @Test
@@ -121,7 +121,7 @@ class TimedFrequencyPTATest {
                             "j",
                             3.seconds,
                             listOf(3.seconds),
-                            Transition("c", 1, 1.0f, State("k", 0.seconds, emptyList()))))))))
+                            Transition("c", 1, 1.0f, State("k", null, emptyList()))))))))
   }
 
   @Test
@@ -172,12 +172,12 @@ class TimedFrequencyPTATest {
                             Unit,
                             3.seconds,
                             listOf(3.seconds, 3.seconds),
-                            Transition("c", 1, 1.0f, State(Unit, 0.seconds, emptyList())),
+                            Transition("c", 1, 1.0f, State(Unit, null, emptyList())),
                             Transition(
                                 "d",
                                 1,
                                 1.0f,
-                                State(Unit, 0.seconds, emptyList()),
+                                State(Unit, null, emptyList()),
                             )))))))
   }
 
@@ -223,12 +223,12 @@ class TimedFrequencyPTATest {
                             "b",
                             3.seconds,
                             listOf(3.seconds, 3.seconds),
-                            Transition(Unit, 1, 0.5f, State("c", 0.seconds, emptyList())),
+                            Transition(Unit, 1, 0.5f, State("c", null, emptyList())),
                             Transition(
                                 Unit,
                                 1,
                                 0.5f,
-                                State("d", 0.seconds, emptyList()),
+                                State("d", null, emptyList()),
                             )))))))
   }
 
@@ -276,12 +276,12 @@ class TimedFrequencyPTATest {
                             "j",
                             3.seconds,
                             listOf(3.seconds, 3.seconds),
-                            Transition("c", 1, 1.0f, State("k", 0.seconds, emptyList())),
+                            Transition("c", 1, 1.0f, State("k", null, emptyList())),
                             Transition(
                                 "d",
                                 1,
                                 1.0f,
-                                State("l", 0.seconds, emptyList()),
+                                State("l", null, emptyList()),
                             )))))))
   }
 }

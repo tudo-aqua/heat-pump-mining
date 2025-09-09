@@ -101,7 +101,8 @@ class TimedFrequencyPTA<I, O>(rootOutput: O) :
 
   override fun getStateOutput(state: TimedFrequencyTreeNode<I, O, *>): O = state.output
 
-  override fun getExitTime(state: TimedFrequencyTreeNode<I, O, *>): Duration = state.averageTiming
+  override fun getExitTimes(state: TimedFrequencyTreeNode<I, O, *>): Collection<Duration> =
+      state.timings
 
   override fun getTransitions(
       state: TimedFrequencyTreeNode<I, O, *>,

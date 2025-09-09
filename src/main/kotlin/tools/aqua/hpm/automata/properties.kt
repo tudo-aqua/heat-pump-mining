@@ -16,12 +16,12 @@ interface MutableFrequency<T> : Frequency<T>, MutableProbabilistic<T> {
   fun setTransitionFrequency(transition: T, frequency: Int)
 }
 
-interface ExitTime<S> {
-  fun getExitTime(state: S): Duration
+interface ExitTimes<S> {
+  fun getExitTimes(state: S): Collection<Duration>
 }
 
 interface MutableExitTime<S> {
-  fun setExitTime(state: S, time: Duration)
+  fun setExitTimes(state: S, times: Collection<Duration>)
 }
 
 interface FrequencyAndProbability {
@@ -38,11 +38,12 @@ fun Int.withProbability(probability: Float): SimpleFrequencyAndProbability =
     SimpleFrequencyAndProbability(this, probability)
 
 interface TimedOutput<O> {
-  val time: Duration
+  val times: Collection<Duration>
   val output: O
 }
 
-data class SimpleTimedOutput<O>(override val time: Duration, override val output: O) :
+data class SimpleTimedOutput<O>(override val times: Collection<Duration>, override val output: O) :
     TimedOutput<O>
 
-fun <O> O.withExitTime(time: Duration): SimpleTimedOutput<O> = SimpleTimedOutput(time, this)
+fun <O> O.withExitTimes(times: Collection<Duration>): SimpleTimedOutput<O> =
+    SimpleTimedOutput(times, this)

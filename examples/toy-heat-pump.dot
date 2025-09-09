@@ -3,40 +3,40 @@
 // SPDX-License-Identifier: CC-BY-4.0
 digraph g {
   m_h1 [
-    label="heating / t=15m";
+    label="heating / t=[14m, 15m, 16m]";
   ];
   m_hhw [
-    label="heating_and_hot_water / t=10m";
+    label="heating_and_hot_water / t=[8m, 10m, 12m]";
   ];
   m_h2 [
-    label="heating / t=15m";
+    label="heating / t=[14m, 15m, 16m]";
   ];
   m_s [
-    label="standby / t=30m";
+    label="standby / t=[25m, 30m, 35m]";
   ];
   m_hw [
-    label="hot_water / t=10m";
+    label="hot_water / t=[8m, 10m, 12m]";
   ];
   d_s [
-    label="standby / t=6h";
+    label="standby / t=[5h, 6h, 7h]";
   ];
   d_d [
-    label="defrost / t=1h";
+    label="defrost / t=[1h, 1h, 1h]";
   ];
   e_h [
-    label="heating / t=1h";
+    label="heating / t=[50m, 60m, 70m]";
   ];
   e_s [
-    label="standby / t=1h";
+    label="standby / t=[50m, 60m, 70m]";
   ];
   e_hhw [
-    label="heating_and_hot_water / t=5m";
+    label="heating_and_hot_water / t=[4m, 5m, 6m]";
   ];
   e_hw [
-    label="hot_water / t=1m";
+    label="hot_water / t=[1m, 1m, 1m]";
   ];
   n_s [
-    label="standby / t=10h";
+    label="standby / t=[9h, 10h, 11h]";
   ];
   // weekday morning routine
   m_h1 -> m_hhw [

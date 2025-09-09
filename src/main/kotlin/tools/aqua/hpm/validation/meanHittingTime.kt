@@ -16,8 +16,9 @@ import kotlin.contracts.InvocationKind.EXACTLY_ONCE
 import kotlin.contracts.contract
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.nanoseconds
-import kotlin.time.Duration.Companion.seconds
 import tools.aqua.hpm.automata.DeterministicFrequencyProbabilisticTimedInputOutputAutomaton
+import tools.aqua.hpm.util.average
+import tools.aqua.hpm.util.nanoseconds
 import tools.aqua.hpm.util.toBigIntegerNanoseconds
 
 class UnconnectedAutomatonException(val unconnectedStates: Collection<*>) :
@@ -64,7 +65,7 @@ fun <S, I, T> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S, I,
             mkEq(
                 stateTimes.getValue(source),
                 mkAdd(
-                    mkReal(getExitTime(source).toBigIntegerNanoseconds().toString()),
+                    mkReal(getExitTimes(source).average().toBigIntegerNanoseconds().toString()),
                     *getTransitions(source, input)
                         .filter { getTransitionProbability(it) > 0 }
                         .map { transition ->
@@ -89,7 +90,5 @@ inline fun <T : AutoCloseable, R> T.useApply(block: T.() -> R): R {
 
 fun Model.getDuration(expr: Expr<RealSort>): Duration {
   val ratNum = getConstInterp(expr) as RatNum
-  val value = ratNum.bigIntNumerator / ratNum.bigIntDenominator
-  val (seconds, nanoseconds) = value.divideAndRemainder(1.seconds.inWholeNanoseconds.toBigInteger())
-  return seconds.toDouble().seconds + nanoseconds.toDouble().nanoseconds
+  return (ratNum.bigIntNumerator / ratNum.bigIntDenominator).nanoseconds
 }

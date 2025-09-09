@@ -8,6 +8,4 @@ import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation
 
 private val STANDARD_DEVIATION = StandardDeviation()
 
-fun standardDeviation(values: DoubleArray): Double {
-  return STANDARD_DEVIATION.evaluate(values)
-}
+fun standardDeviation(values: DoubleArray): Double = STANDARD_DEVIATION.evaluate(values)

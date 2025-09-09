@@ -11,11 +11,10 @@ import net.automatalib.word.Word
 import tools.aqua.rereso.log.Log
 import tools.aqua.rereso.log.LogEntry
 
-fun <I, O> TimedIOTrace<I, O>.toQuery(): DefaultQuery<I, Word<Pair<Duration, O>>> {
-  return DefaultQuery<I, Word<Pair<Duration, O>>>(
-      Word.fromList(tail.map { it.input }),
-      Word.fromList(listOf(ZERO to head) + tail.map { it.time to it.output }))
-}
+fun <I, O> TimedIOTrace<I, O>.toQuery(): DefaultQuery<I, Word<Pair<Duration, O>>> =
+    DefaultQuery<I, Word<Pair<Duration, O>>>(
+        Word.fromList(tail.map { it.input }),
+        Word.fromList(listOf(ZERO to head) + tail.map { it.time to it.output }))
 
 fun <T> Log.toTimedIOTrace(inputSymbol: T): TimedIOTrace<T, String> =
     TimedIOTrace(

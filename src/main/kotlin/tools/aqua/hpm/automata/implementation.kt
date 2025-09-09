@@ -22,7 +22,7 @@ class DefaultDeterministicFrequencyProbabilisticTimedInputOutputAutomaton<I, O> 
   private var initial: DFPTIOState? = null
   private val states = mutableListOf<DFPTIOState>()
   private val outputs = WeakHashMap<DFPTIOState, O>()
-  private val exitTimes = WeakHashMap<DFPTIOState, Duration>()
+  private val exitTimes = WeakHashMap<DFPTIOState, Collection<Duration>>()
 
   private val transitions = ThreeStageHashMap<DFPTIOState, I, O, DFPTIOTransition>()
   private val frequencies = WeakHashMap<DFPTIOTransition, Int>()
@@ -43,7 +43,7 @@ class DefaultDeterministicFrequencyProbabilisticTimedInputOutputAutomaton<I, O> 
     return DFPTIOState().also {
       states += it
       outputs[it] = property.output
-      exitTimes[it] = property.time
+      exitTimes[it] = property.times
     }
   }
 
@@ -96,10 +96,10 @@ class DefaultDeterministicFrequencyProbabilisticTimedInputOutputAutomaton<I, O> 
     outputs[state] = output
   }
 
-  override fun getExitTime(state: DFPTIOState): Duration = exitTimes.getValue(state)
+  override fun getExitTimes(state: DFPTIOState): Collection<Duration> = exitTimes.getValue(state)
 
-  override fun setExitTime(state: DFPTIOState, time: Duration) {
-    exitTimes[state] = time
+  override fun setExitTimes(state: DFPTIOState, times: Collection<Duration>) {
+    exitTimes[state] = times
   }
 
   override fun getTransitionProbability(transition: DFPTIOTransition): Float =

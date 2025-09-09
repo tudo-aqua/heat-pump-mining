@@ -3,16 +3,16 @@
 // SPDX-License-Identifier: CC-BY-4.0
 digraph g {
   s0 [
-    label="a / t=1m";
+    label="a / t=[1m, 1m]";
   ];
   s1 [
-    label="b / t=1m";
+    label="b / t=[1m, 1m]";
   ];
   s2 [
-    label="a / t=10m";
+    label="a / t=[10m, 10m]";
   ];
   s3 [
-    label="c / t=10m";
+    label="c / t=[10m, 10m]";
   ];
   s0 -> s1 [
     label="- / n=1 / p=1";
