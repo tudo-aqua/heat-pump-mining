@@ -15,7 +15,6 @@ import org.gradle.api.attributes.Category.DOCUMENTATION
 import org.gradle.api.attributes.DocsType.DOCS_TYPE_ATTRIBUTE
 import org.gradle.api.attributes.Usage.JAVA_RUNTIME
 import org.gradle.api.attributes.Usage.USAGE_ATTRIBUTE
-import org.gradle.api.file.DuplicatesStrategy.EXCLUDE
 import org.gradle.api.plugins.BasePlugin.BUILD_GROUP
 import org.gradle.api.tasks.testing.logging.TestLogEvent.FAILED
 import org.gradle.api.tasks.testing.logging.TestLogEvent.PASSED
@@ -264,12 +263,7 @@ tasks.test {
 
 application { mainClass = "tools.aqua.hpm.cli.CliKt" }
 
-tasks {
-  distTar { duplicatesStrategy = EXCLUDE }
-  distZip { duplicatesStrategy = EXCLUDE }
-  installDist { duplicatesStrategy = EXCLUDE }
-  jpackageImage { dependsOn(runtime) }
-}
+tasks { jpackageImage { dependsOn(runtime) } }
 
 runtime {
   jpackage { appVersion = version.toString().substringBefore('-') }
