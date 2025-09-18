@@ -6,6 +6,7 @@ package tools.aqua.hpm.timing
 
 import kotlin.random.Random
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.ZERO
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 import org.apache.commons.math3.distribution.ExponentialDistribution
@@ -25,10 +26,16 @@ val exponential = TimingDistribution { data, precision, random ->
 }
 
 val normal = TimingDistribution { data, precision, random ->
-  NormalDistribution(
-          Well19937c(random.nextInt()),
-          data.average().toDouble(precision),
-          data.standardDeviation().toDouble(precision))
-      .sample()
-      .toDuration(precision)
+  val sd = data.standardDeviation()
+
+  if (sd == ZERO) {
+    data.average()
+  } else {
+    NormalDistribution(
+            Well19937c(random.nextInt()),
+            data.average().toDouble(precision),
+            sd.toDouble(precision))
+        .sample()
+        .toDuration(precision)
+  }
 }
