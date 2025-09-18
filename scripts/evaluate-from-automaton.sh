@@ -11,6 +11,7 @@ heat-pump-mining generate-traces -a "$1.dot" -o "$1-0-validation.json.zst" -n "$
 
 # learn
 learn "$1" 0 1
+cp "$1.dot" "$1-0-original-1.dot"
 
 # validate
 validate() {
@@ -18,9 +19,9 @@ validate() {
   heat-pump-mining validate-hitting-times -a "$1-0-$2-1.dot" -i "$1-0-validation.json.zst" -e "$3" -o "$1-0-$2-1-times.csv" -p
 }
 
-for regime in $(learn); do
+for regime in original $(learn); do
   validate "$1" "$regime" "$2"
 done
 
 # shellcheck disable=SC2046
-heat-pump-mining summarize-results -d . -c "$1" -r 1 -s $(learn) -l 1 --seconds -o "$1-results.csv"
+heat-pump-mining summarize-results -d . -c "$1" -r 1 -s original $(learn) -l 1 --seconds -o "$1-results.csv"
