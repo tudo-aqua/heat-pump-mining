@@ -26,9 +26,6 @@ digraph g {
   e_h [
     label="heating / t=[50m, 60m, 70m]";
   ];
-  e_s [
-    label="standby / t=[50m, 60m, 70m]";
-  ];
   e_hhw [
     label="heating_and_hot_water / t=[4m, 5m, 6m]";
   ];
@@ -69,32 +66,20 @@ digraph g {
     label="- / n=19 / p=0.95";
   ];
   // evening activities
-  e_h -> e_s [
-    label="- / n=4 / p=0.4";
-  ];
   e_h -> e_hhw [
-    label="- / n=2 / p=0.2";
+    label="- / n=3 / p=0.3";
   ];
   e_h -> n_s [
-    label="- / n=4 / p=0.4";
-  ];
-  e_s -> e_h [
-    label="- / n=8 / p=0.8";
-  ];
-  e_s -> e_hw [
-    label="- / n=2 / p=0.2";
-  ];
-  e_hw -> e_s [
-    label="- / n=9 / p=0.9";
+    label="- / n=7 / p=0.7";
   ];
   e_hw -> e_hhw [
-    label="- / n=1 / p=0.1";
+    label="- / n=10 / p=1";
   ];
   e_hhw -> e_h [
-    label="- / n=9 / p=0.9";
+    label="- / n=5 / p=0.5";
   ];
   e_hhw -> e_hw [
-    label="- / n=1 / p=0.1";
+    label="- / n=5 / p=0.5";
   ];
   // night
   n_s -> m_h1 [
