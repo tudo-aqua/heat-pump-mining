@@ -15,7 +15,6 @@ import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind.EXACTLY_ONCE
 import kotlin.contracts.contract
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.nanoseconds
 import tools.aqua.hpm.automata.DeterministicFrequencyProbabilisticTimedInputOutputAutomaton
 import tools.aqua.hpm.util.average
 import tools.aqua.hpm.util.nanoseconds
