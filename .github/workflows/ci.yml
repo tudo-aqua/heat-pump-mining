@@ -32,7 +32,7 @@ jobs:
           wget https://github.com/sylabs/singularity/releases/download/v$SINGULARITY_VERSION/singularity-ce_$SINGULARITY_VERSION-$(lsb_release -cs)_amd64.deb
           sudo dpkg -i singularity-ce_$SINGULARITY_VERSION-$(lsb_release -cs)_amd64.deb || true
           DEBIAN_FRONTEND=noninteractive sudo apt-get install -fy
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
       - run: ./gradlew build kdocJar javadocJar sourcesJar runtimeZip singularityImage
       - uses: actions/upload-artifact@v4
         with:

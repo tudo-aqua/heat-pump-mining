@@ -24,4 +24,4 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - uses: gradle/actions/dependency-submission@v4
+      - uses: gradle/actions/dependency-submission@v5
