@@ -27,7 +27,6 @@ import de.learnlib.datastructure.pta.config.DefaultProcessingOrders.LEX_ORDER
 import java.util.Optional
 import java.util.stream.Collectors.toList
 import kotlin.io.path.createParentDirectories
-import kotlin.io.path.div
 import kotlin.io.path.name
 import kotlin.jvm.optionals.getOrNull
 import kotlin.random.Random
@@ -45,6 +44,7 @@ import tools.aqua.hpm.data.HittingPredictionList
 import tools.aqua.hpm.data.HittingPredictionResult
 import tools.aqua.hpm.data.RevisionScoreList
 import tools.aqua.hpm.data.RevisionScoreResult
+import tools.aqua.hpm.data.importSplitNibe2Data
 import tools.aqua.hpm.data.toLog
 import tools.aqua.hpm.data.toQuery
 import tools.aqua.hpm.data.toRows
@@ -65,7 +65,6 @@ import tools.aqua.hpm.validation.computeBestTraceSimilarity
 import tools.aqua.hpm.validation.getViterbiPaths
 import tools.aqua.hpm.validation.hittingTimeDelta
 import tools.aqua.rereso.log.LogArchive
-import tools.aqua.rereso.log.importer.importSplitNibeData
 import tools.aqua.rereso.util.smartDecode
 import tools.aqua.rereso.util.smartEncode
 
@@ -81,7 +80,7 @@ class ConvertFormat : CliktCommand() {
   val output by option("-o", "--output").path(canBeDir = false).required()
 
   override fun run() {
-    val archive = importSplitNibeData(input)
+    val archive = importSplitNibe2Data(input)
     output.createParentDirectories().smartEncode(archive)
   }
 }
