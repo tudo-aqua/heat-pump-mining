@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+// SPDX-FileCopyrightText: 2025-2026 The Heat Pump Mining Authors, see AUTHORS.md
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -26,7 +26,10 @@ class RelaxedTimedIOAlergia<Input : Comparable<Input>, Output : Comparable<Outpu
     private val analyzeMergedSamples: Boolean = false,
 ) :
     PassiveLearningAlgorithm<
-        RTIOAlergiaMergedAutomaton<Input, Output>, Input, Word<Pair<Duration, Output>>> {
+        RTIOAlergiaMergedAutomaton<Input, Output>,
+        Input,
+        Word<Pair<Duration, Output>>,
+    > {
   private var pta: TimedFrequencyPTA<Input, Output>? = null
 
   override fun addSamples(samples: Collection<DefaultQuery<Input, Word<Pair<Duration, Output>>>>) {
@@ -48,7 +51,8 @@ class RelaxedTimedIOAlergia<Input : Comparable<Input>, Output : Comparable<Outpu
               it.output.first().second,
               (it.input zip it.output.drop(1)).map { (input, output) ->
                 TimedIO(output.first, input, output.second)
-              })
+              },
+          )
       pta!!.addWord(word)
     }
   }
@@ -64,5 +68,6 @@ class RelaxedTimedIOAlergia<Input : Comparable<Input>, Output : Comparable<Outpu
           timingSimilaritySignificance,
           timingSimilaritySignificanceDecay,
           tailLength,
-          analyzeMergedSamples)
+          analyzeMergedSamples,
+      )
 }

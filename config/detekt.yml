@@ -509,6 +509,8 @@ FaireRuleSet:
     active: true
   DoNotUseSizePropertyInAssert:
     active: true
+  FilterNotNullOverMapNotNullForFiltering:
+    active: true
   GetOrDefaultShouldBeReplacedWithGetOrElse:
     active: true
   NoDuplicateKeysInMapOf:
@@ -532,6 +534,8 @@ FaireRuleSet:
   UseFirstOrNullInsteadOfFind:
     active: true
   UseMapNotNullInsteadOfFilterNotNull:
+    active: true
+  UseFirstOrNullOf:
     active: true
   UseOfCollectionInsteadOfEmptyCollection:
     active: false

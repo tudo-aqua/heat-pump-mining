@@ -1,14 +1,38 @@
-// SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+// SPDX-FileCopyrightText: 2025-2026 The Heat Pump Mining Authors, see AUTHORS.md
 //
 // SPDX-License-Identifier: Apache-2.0
 
 package tools.aqua.hpm.util
 
+import java.math.BigInteger
 import kotlin.math.ln
 import kotlin.random.Random
+import kotlin.random.asJavaRandom
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.nanoseconds
+import kotlin.time.Duration.Companion.seconds
 
 fun <T> Random.selectWeighted(values: Map<T, Number>): T =
     values.entries
         .map { (entry, weight) -> entry to -ln(nextDouble()) / weight.toDouble() }
         .minWith(compareBy { (_, value) -> value })
         .first
+
+fun <T> Random.selectOneOf(vararg elements: T): T = elements[nextInt(0, elements.size - 1)]
+
+fun <T> Random.runOneOf(vararg elements: () -> T): T = selectOneOf(*elements)()
+
+fun Random.nextBigInteger(range: ClosedRange<BigInteger>): BigInteger {
+  require(!range.isEmpty())
+  if (range.start == range.endInclusive) return range.start
+
+  while (true) {
+    val maybeResult = BigInteger(range.endInclusive.bitLength(), asJavaRandom())
+    if (maybeResult in range) return maybeResult
+  }
+}
+
+fun Random.nextDuration(range: ClosedRange<Duration>): Duration =
+    (range.endInclusive - range.start).toComponents { s, ns ->
+      nextLong(s).seconds + nextInt(ns).nanoseconds
+    } + range.start

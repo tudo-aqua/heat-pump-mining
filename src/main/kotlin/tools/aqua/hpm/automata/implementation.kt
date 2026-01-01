@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+// SPDX-FileCopyrightText: 2025-2026 The Heat Pump Mining Authors, see AUTHORS.md
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -16,7 +16,11 @@ class DFPTIOTransition
 
 class DefaultDeterministicFrequencyProbabilisticTimedInputOutputAutomaton<I, O> :
     MutableDeterministicFrequencyProbabilisticTimedInputOutputAutomaton<
-        DFPTIOState, I, DFPTIOTransition, O>,
+        DFPTIOState,
+        I,
+        DFPTIOTransition,
+        O,
+    >,
     StateIDs<DFPTIOState> {
 
   private var initial: DFPTIOState? = null
@@ -61,7 +65,7 @@ class DefaultDeterministicFrequencyProbabilisticTimedInputOutputAutomaton<I, O> 
 
   override fun createTransition(
       successor: DFPTIOState,
-      properties: FrequencyAndProbability
+      properties: FrequencyAndProbability,
   ): DFPTIOTransition =
       DFPTIOTransition().also {
         frequencies[it] = properties.frequency
@@ -73,7 +77,7 @@ class DefaultDeterministicFrequencyProbabilisticTimedInputOutputAutomaton<I, O> 
       state: DFPTIOState,
       input: I,
       output: O,
-      transition: DFPTIOTransition?
+      transition: DFPTIOTransition?,
   ) {
     val output = outputs.getValue(targets.getValue(transition))
     if (transition != null) {

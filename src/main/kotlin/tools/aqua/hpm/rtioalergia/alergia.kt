@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+// SPDX-FileCopyrightText: 2025-2026 The Heat Pump Mining Authors, see AUTHORS.md
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -28,7 +28,7 @@ import tools.aqua.rereso.util.mapToSet
  */
 private data class AccessString<I : Comparable<I>, O : Comparable<O>>(
     val head: O,
-    val tail: List<Pair<I, O>> = emptyList()
+    val tail: List<Pair<I, O>> = emptyList(),
 ) : Comparable<AccessString<I, O>> {
   override fun compareTo(other: AccessString<I, O>): Int {
     (tail.size - other.tail.size).let { if (it != 0) return it }
@@ -56,7 +56,9 @@ private data class AccessString<I : Comparable<I>, O : Comparable<O>>(
 
   override fun toString(): String =
       (listOf(head) + tail.flatMap { (i, o) -> listOf(i, o) }).joinToString(
-          prefix = "[", postfix = "]")
+          prefix = "[",
+          postfix = "]",
+      )
 }
 
 @ConsistentCopyVisibility
@@ -98,7 +100,7 @@ private constructor(
 
   fun moveTo(
       source: AlergiaState<I, O> = this.source,
-      target: AlergiaState<I, O> = this.target
+      target: AlergiaState<I, O> = this.target,
   ): AlergiaTransition<I, O> {
     require(source != this.source || target != this.target) { "self-move of $this" }
     this.source.removeTransition(this)
@@ -148,7 +150,7 @@ private class AlergiaState<I : Comparable<I>, O : Comparable<O>>(
 
   override fun getTransitionOrNull(
       input: I,
-      output: O
+      output: O,
   ): FrequencyMergedTransition<AlergiaState<I, O>, I>? = transitionsMutable[input, output]
 
   override fun getTransitions(
@@ -213,7 +215,9 @@ private infix fun <I : Comparable<I>, O : Comparable<O>> AlergiaState<I, O>.tran
 ): List<
     Pair<
         FrequencyMergedTransition<AlergiaState<I, O>, I>,
-        FrequencyMergedTransition<AlergiaState<I, O>, I>>> =
+        FrequencyMergedTransition<AlergiaState<I, O>, I>,
+    >
+> =
     maybeTransitionPairs(other).mapNotNull { (ourT, theirT) ->
       if (ourT != null && theirT != null) ourT to theirT else null
     }
@@ -231,7 +235,11 @@ class RTIOAlergiaMergedAutomaton<I : Comparable<I>, O : Comparable<O>>(
     private val analyzeMergedSamples: Boolean = false,
 ) :
     DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<
-        TimedFrequencyNode<I, O, *>, I, FrequencyTransition<TimedFrequencyNode<I, O, *>, I>, O> {
+        TimedFrequencyNode<I, O, *>,
+        I,
+        FrequencyTransition<TimedFrequencyNode<I, O, *>, I>,
+        O,
+    > {
   init {
     require(frequencySimilaritySignificance in 0.0..1.0) {
       "Frequency similiarity significance must be in [0, 1])"
@@ -268,7 +276,8 @@ class RTIOAlergiaMergedAutomaton<I : Comparable<I>, O : Comparable<O>>(
         CANONICAL_ORDER -> PriorityQueue<AlergiaState<I, O>>(comparing { it.accessString })
         LEX_ORDER ->
             PriorityQueue(
-                comparing({ it.accessString }, { string, other -> string.lexCompareTo(other) }))
+                comparing({ it.accessString }, { string, other -> string.lexCompareTo(other) })
+            )
         FIFO_ORDER -> JArrayDeque()
         LIFO_ORDER -> asLifoQueue(JArrayDeque())
       }
@@ -320,13 +329,17 @@ class RTIOAlergiaMergedAutomaton<I : Comparable<I>, O : Comparable<O>>(
         // recurse into children
         (source transitionPairs target).forEach { (sourceT, targetT) ->
           // if a single child cannot merge, abort
-          if (!callRecursive(
-              MergeExplorationTask(
-                  targetT.target,
-                  sourceT.target,
-                  frequencySSL * frequencySimilaritySignificanceDecay,
-                  timingSSL * timingSimilaritySignificanceDecay,
-                  tail?.let { (it - 1).coerceAtLeast(0) }))) {
+          if (
+              !callRecursive(
+                  MergeExplorationTask(
+                      targetT.target,
+                      sourceT.target,
+                      frequencySSL * frequencySimilaritySignificanceDecay,
+                      timingSSL * timingSimilaritySignificanceDecay,
+                      tail?.let { (it - 1).coerceAtLeast(0) },
+                  )
+              )
+          ) {
             return@DeepRecursiveFunction false
           }
         }
@@ -337,36 +350,44 @@ class RTIOAlergiaMergedAutomaton<I : Comparable<I>, O : Comparable<O>>(
               source,
               frequencySimilaritySignificance,
               timingSimilaritySignificance,
-              tailLength))
+              tailLength,
+          )
+      )
 
   private fun isMergeStochasticallyValid(
       target: AlergiaState<I, O>,
       source: AlergiaState<I, O>,
       frequencySimilaritySignificanceLocal: Double,
-      timingSimilaritySignificanceLocal: Double
+      timingSimilaritySignificanceLocal: Double,
   ): Boolean {
-    if (fTest(
-            if (analyzeMergedSamples) target.averageTiming else target.averageOriginalTiming,
-            if (analyzeMergedSamples) target.totalFrequency else target.totalOriginalFrequency,
-            if (analyzeMergedSamples) source.averageTiming else source.averageOriginalTiming,
-            if (analyzeMergedSamples) source.totalFrequency else source.totalOriginalFrequency,
-            timingSimilaritySignificanceLocal)
-        .not())
+    if (
+        fTest(
+                if (analyzeMergedSamples) target.averageTiming else target.averageOriginalTiming,
+                if (analyzeMergedSamples) target.totalFrequency else target.totalOriginalFrequency,
+                if (analyzeMergedSamples) source.averageTiming else source.averageOriginalTiming,
+                if (analyzeMergedSamples) source.totalFrequency else source.totalOriginalFrequency,
+                timingSimilaritySignificanceLocal,
+            )
+            .not()
+    )
         return false
 
     (source maybeTransitionPairs target).forEach { pair ->
       val (sourceT, targetT) = pair
-      if (hoeffdingTest(
-              if (analyzeMergedSamples) targetT?.frequency ?: 0
-              else targetT?.originalFrequency ?: 0,
-              if (analyzeMergedSamples) target.totalFrequency(pair.input)
-              else target.totalOriginalFrequency(pair.input),
-              if (analyzeMergedSamples) sourceT?.frequency ?: 0
-              else sourceT?.originalFrequency ?: 0,
-              if (analyzeMergedSamples) source.totalFrequency(pair.input)
-              else source.totalOriginalFrequency(pair.input),
-              frequencySimilaritySignificanceLocal)
-          .not())
+      if (
+          hoeffdingTest(
+                  if (analyzeMergedSamples) targetT?.frequency ?: 0
+                  else targetT?.originalFrequency ?: 0,
+                  if (analyzeMergedSamples) target.totalFrequency(pair.input)
+                  else target.totalOriginalFrequency(pair.input),
+                  if (analyzeMergedSamples) sourceT?.frequency ?: 0
+                  else sourceT?.originalFrequency ?: 0,
+                  if (analyzeMergedSamples) source.totalFrequency(pair.input)
+                  else source.totalOriginalFrequency(pair.input),
+                  frequencySimilaritySignificanceLocal,
+              )
+              .not()
+      )
           return false
     }
 
@@ -412,7 +433,8 @@ class RTIOAlergiaMergedAutomaton<I : Comparable<I>, O : Comparable<O>>(
         val targetTransition = target[sourceTransition.input, sourceTransition.output]
         if (targetTransition != null) {
           callRecursive(
-              MergeTask(target, targetTransition.target, sourceTransition, sourceTransition.target))
+              MergeTask(target, targetTransition.target, sourceTransition, sourceTransition.target)
+          )
         } else {
           sourceTransition.moveTo(target, sourceSuccessor)
         }
@@ -450,7 +472,7 @@ class RTIOAlergiaMergedAutomaton<I : Comparable<I>, O : Comparable<O>>(
 
   override fun getTransitions(
       state: TimedFrequencyNode<I, O, *>,
-      input: I
+      input: I,
   ): Collection<FrequencyTransition<TimedFrequencyNode<I, O, *>, I>> = state.getTransitions(input)
 
   override fun getSuccessor(
@@ -468,6 +490,6 @@ class RTIOAlergiaMergedAutomaton<I : Comparable<I>, O : Comparable<O>>(
   override fun getTransition(
       state: TimedFrequencyNode<I, O, *>,
       input: I,
-      output: O
+      output: O,
   ): FrequencyTransition<TimedFrequencyNode<I, O, *>, I>? = state.getTransitionOrNull(input, output)
 }

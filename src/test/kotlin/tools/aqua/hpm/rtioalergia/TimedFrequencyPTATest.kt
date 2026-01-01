@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+// SPDX-FileCopyrightText: 2025-2026 The Heat Pump Mining Authors, see AUTHORS.md
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -25,7 +25,8 @@ class TimedFrequencyPTATest {
                 time,
                 output ->
               TimedIO(time, input, output)
-            })
+            },
+        )
 
     val pta = TimedFrequencyPTA<String, Unit>(Unit).apply { addWord(trace) }
 
@@ -50,7 +51,13 @@ class TimedFrequencyPTATest {
                             Unit,
                             3.seconds,
                             listOf(3.seconds),
-                            Transition("c", 1, 1.0f, State(Unit, null, emptyList()))))))))
+                            Transition("c", 1, 1.0f, State(Unit, null, emptyList())),
+                        ),
+                    ),
+                ),
+            ),
+        )
+    )
   }
 
   @Test
@@ -60,7 +67,8 @@ class TimedFrequencyPTATest {
             "z",
             List(3) {}
                 .zip(listOf(1.seconds, 2.seconds, 3.seconds))
-                .zip(listOf("a", "b", "c")) { input, time, output -> TimedIO(time, input, output) })
+                .zip(listOf("a", "b", "c")) { input, time, output -> TimedIO(time, input, output) },
+        )
 
     val pta = TimedFrequencyPTA<Unit, String>("z").apply { addWord(trace) }
 
@@ -85,7 +93,13 @@ class TimedFrequencyPTATest {
                             "b",
                             3.seconds,
                             listOf(3.seconds),
-                            Transition(Unit, 1, 1.0f, State("c", null, emptyList()))))))))
+                            Transition(Unit, 1, 1.0f, State("c", null, emptyList())),
+                        ),
+                    ),
+                ),
+            ),
+        )
+    )
   }
 
   @Test
@@ -94,9 +108,11 @@ class TimedFrequencyPTATest {
         TimedIOTrace(
             "z",
             listOf("a", "b", "c").zip(listOf(1.seconds, 2.seconds, 3.seconds)).zip(
-                listOf("i", "j", "k")) { input, time, output ->
-                  TimedIO(time, input, output)
-                })
+                listOf("i", "j", "k")
+            ) { input, time, output ->
+              TimedIO(time, input, output)
+            },
+        )
 
     val pta = TimedFrequencyPTA<String, String>("z").apply { addWord(trace) }
 
@@ -121,7 +137,13 @@ class TimedFrequencyPTATest {
                             "j",
                             3.seconds,
                             listOf(3.seconds),
-                            Transition("c", 1, 1.0f, State("k", null, emptyList()))))))))
+                            Transition("c", 1, 1.0f, State("k", null, emptyList())),
+                        ),
+                    ),
+                ),
+            ),
+        )
+    )
   }
 
   @Test
@@ -134,7 +156,8 @@ class TimedFrequencyPTATest {
                 time,
                 output ->
               TimedIO(time, input, output)
-            })
+            },
+        )
     val trace2 =
         TimedIOTrace(
             Unit,
@@ -143,7 +166,8 @@ class TimedFrequencyPTATest {
                 time,
                 output ->
               TimedIO(time, input, output)
-            })
+            },
+        )
 
     val pta =
         TimedFrequencyPTA<String, Unit>(Unit).apply {
@@ -178,7 +202,13 @@ class TimedFrequencyPTATest {
                                 1,
                                 1.0f,
                                 State(Unit, null, emptyList()),
-                            )))))))
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        )
+    )
   }
 
   @Test
@@ -188,13 +218,15 @@ class TimedFrequencyPTATest {
             "z",
             List(3) {}
                 .zip(listOf(1.seconds, 2.seconds, 3.seconds))
-                .zip(listOf("a", "b", "c")) { input, time, output -> TimedIO(time, input, output) })
+                .zip(listOf("a", "b", "c")) { input, time, output -> TimedIO(time, input, output) },
+        )
     val trace2 =
         TimedIOTrace(
             "z",
             List(3) {}
                 .zip(listOf(1.seconds, 4.seconds, 3.seconds))
-                .zip(listOf("a", "b", "d")) { input, time, output -> TimedIO(time, input, output) })
+                .zip(listOf("a", "b", "d")) { input, time, output -> TimedIO(time, input, output) },
+        )
 
     val pta =
         TimedFrequencyPTA<Unit, String>("z").apply {
@@ -229,7 +261,13 @@ class TimedFrequencyPTATest {
                                 1,
                                 0.5f,
                                 State("d", null, emptyList()),
-                            )))))))
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        )
+    )
   }
 
   @Test
@@ -238,16 +276,20 @@ class TimedFrequencyPTATest {
         TimedIOTrace(
             "z",
             listOf("a", "b", "c").zip(listOf(1.seconds, 2.seconds, 3.seconds)).zip(
-                listOf("i", "j", "k")) { input, time, output ->
-                  TimedIO(time, input, output)
-                })
+                listOf("i", "j", "k")
+            ) { input, time, output ->
+              TimedIO(time, input, output)
+            },
+        )
     val trace2 =
         TimedIOTrace(
             "z",
             listOf("a", "b", "d").zip(listOf(1.seconds, 4.seconds, 3.seconds)).zip(
-                listOf("i", "j", "l")) { input, time, output ->
-                  TimedIO(time, input, output)
-                })
+                listOf("i", "j", "l")
+            ) { input, time, output ->
+              TimedIO(time, input, output)
+            },
+        )
 
     val pta =
         TimedFrequencyPTA<String, String>("z").apply {
@@ -282,6 +324,12 @@ class TimedFrequencyPTATest {
                                 1,
                                 1.0f,
                                 State("l", null, emptyList()),
-                            )))))))
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        )
+    )
   }
 }

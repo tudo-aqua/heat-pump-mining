@@ -1,11 +1,11 @@
-// SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+// SPDX-FileCopyrightText: 2025-2026 The Heat Pump Mining Authors, see AUTHORS.md
 //
 // SPDX-License-Identifier: Apache-2.0
 
 import org.apache.tools.ant.DirectoryScanner
 
 plugins {
-  id("com.gradle.develocity") version "4.1"
+  id("com.gradle.develocity") version "4.3"
   id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 

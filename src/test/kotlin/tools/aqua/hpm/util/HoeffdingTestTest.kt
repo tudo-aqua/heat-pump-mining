@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+// SPDX-FileCopyrightText: 2025-2026 The Heat Pump Mining Authors, see AUTHORS.md
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -33,7 +33,7 @@ internal class HoeffdingTestTest {
       totalFrequency1: Int,
       frequency2: Int,
       totalFrequency2: Int,
-      epsilon: Double
+      epsilon: Double,
   ) {
     assertThat(hoeffdingSignificance(frequency1, totalFrequency1, frequency2, totalFrequency2))
         .isCloseTo(epsilon, 0.1.percent)
@@ -46,7 +46,7 @@ internal class HoeffdingTestTest {
       totalFrequency1: Int,
       frequency2: Int,
       totalFrequency2: Int,
-      epsilon: Double
+      epsilon: Double,
   ) {
     assertThat(hoeffdingSimilarity(frequency1, totalFrequency1, frequency2, totalFrequency2))
         .isCloseTo(epsilon, 0.1.percent)
@@ -74,10 +74,11 @@ internal class HoeffdingTestTest {
       totalFrequency1: Int,
       frequency2: Int,
       totalFrequency2: Int,
-      epsilon: Double
+      epsilon: Double,
   ) {
     assertThat(
-            hoeffdingTest(frequency1, totalFrequency1, frequency2, totalFrequency2, epsilon * 1.01))
+            hoeffdingTest(frequency1, totalFrequency1, frequency2, totalFrequency2, epsilon * 1.01)
+        )
         .isFalse
   }
 
@@ -88,10 +89,11 @@ internal class HoeffdingTestTest {
       totalFrequency1: Int,
       frequency2: Int,
       totalFrequency2: Int,
-      epsilon: Double
+      epsilon: Double,
   ) {
     assertThat(
-            hoeffdingTest(frequency1, totalFrequency1, frequency2, totalFrequency2, epsilon * 0.99))
+            hoeffdingTest(frequency1, totalFrequency1, frequency2, totalFrequency2, epsilon * 0.99)
+        )
         .isTrue
   }
 

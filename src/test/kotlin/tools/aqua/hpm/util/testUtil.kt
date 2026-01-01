@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+// SPDX-FileCopyrightText: 2025-2026 The Heat Pump Mining Authors, see AUTHORS.md
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -26,7 +26,7 @@ internal infix fun <A, B, C> Iterable<Pair<A, B>>.zip(right: Iterable<C>): List<
 
 internal inline fun <A, B, C, V> Iterable<Pair<A, B>>.zip(
     other: Iterable<C>,
-    transform: (a: A, b: B, c: C) -> V
+    transform: (a: A, b: B, c: C) -> V,
 ): List<V> =
     buildList(minOf(size(10), other.size(10))) {
       val first = this@zip.iterator()
@@ -65,11 +65,15 @@ internal val <T> Iterable<T>.assertedDouble: Pair<T, T>
 internal fun <S : TimedFrequencyNode<I, O, *>, I, O> S.assertStateData(
     automaton:
         DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<
-            S, I, FrequencyTransition<S, I>, O>,
+            S,
+            I,
+            FrequencyTransition<S, I>,
+            O,
+        >,
     output: O,
     exitTime: Duration?,
     timings: Collection<Duration>,
-    nTransitions: Int
+    nTransitions: Int,
 ) {
   assertThat(this).extracting { it.output }.isEqualTo(output)
   assertThat(this).extracting { automaton.getStateOutput(it) }.isEqualTo(output)
@@ -93,10 +97,14 @@ internal fun <S : TimedFrequencyNode<I, O, *>, I, O> S.assertStateData(
 internal fun <S : TimedFrequencyNode<I, O, *>, I, O> FrequencyTransition<S, I>.assertTransitionData(
     automaton:
         DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<
-            S, I, FrequencyTransition<S, I>, O>,
+            S,
+            I,
+            FrequencyTransition<S, I>,
+            O,
+        >,
     input: I,
     frequency: Int,
-    probability: Float
+    probability: Float,
 ) {
   assertThat(this).extracting { it.input }.isEqualTo(input)
 
@@ -123,13 +131,13 @@ internal data class State<I, O>(
     override val output: O,
     val exitTime: Duration?,
     val timings: Collection<Duration>,
-    val transitions: List<Transition<I, O>>
+    val transitions: List<Transition<I, O>>,
 ) : StateRef<I, O> {
   constructor(
       output: O,
       exitTime: Duration?,
       timings: Collection<Duration>,
-      vararg transitions: Transition<I, O>
+      vararg transitions: Transition<I, O>,
   ) : this(output, exitTime, timings, transitions.asList())
 }
 
@@ -137,12 +145,12 @@ internal data class Transition<I, O>(
     val input: I,
     val frequency: Int,
     val probability: Float,
-    val successor: StateRef<I, O>
+    val successor: StateRef<I, O>,
 )
 
 private data class AssertionState<S : TimedFrequencyNode<I, O, *>, I, O>(
     val stateStack: List<S>,
-    val stateRef: StateRef<I, O>
+    val stateRef: StateRef<I, O>,
 ) {
   constructor(state: S, stateRef: StateRef<I, O>) : this(listOf(state), stateRef)
 }
@@ -150,8 +158,8 @@ private data class AssertionState<S : TimedFrequencyNode<I, O, *>, I, O>(
 internal fun <
     S : TimedFrequencyNode<I, O, *>,
     I,
-    O> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<
-    S, I, FrequencyTransition<S, I>, O>
+    O,
+> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S, I, FrequencyTransition<S, I>, O>
     .assertAutomatonStructure(initial: State<I, O>) {
   val a = this
   DeepRecursiveFunction<AssertionState<S, I, O>, Unit> { (qStack, qRef) ->

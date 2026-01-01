@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+// SPDX-FileCopyrightText: 2025-2026 The Heat Pump Mining Authors, see AUTHORS.md
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -26,7 +26,7 @@ data class ReuseHeader(val license: License, val copyrights: List<FileCopyright>
 
   constructor(
       license: License,
-      vararg copyrights: FileCopyright
+      vararg copyrights: FileCopyright,
   ) : this(license, copyrights.toList())
 
   // REUSE-IgnoreStart

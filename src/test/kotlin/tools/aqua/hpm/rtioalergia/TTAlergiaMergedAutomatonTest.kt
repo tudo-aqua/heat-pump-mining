@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+// SPDX-FileCopyrightText: 2025-2026 The Heat Pump Mining Authors, see AUTHORS.md
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -23,9 +23,11 @@ class TTAlergiaMergedAutomatonTest {
         TimedIOTrace(
             "z",
             listOf("a", "b", "c").zip(listOf(1.seconds, 2.seconds, 3.seconds)).zip(
-                listOf("i", "j", "k")) { input, time, output ->
-                  TimedIO(time, input, output)
-                })
+                listOf("i", "j", "k")
+            ) { input, time, output ->
+              TimedIO(time, input, output)
+            },
+        )
 
     val automaton =
         RTIOAlergiaMergedAutomaton(TimedFrequencyPTA<String, String>("z").apply { addWord(trace) })
@@ -51,7 +53,13 @@ class TTAlergiaMergedAutomatonTest {
                             "j",
                             3.seconds,
                             listOf(3.seconds),
-                            Transition("c", 1, 1.0f, State("k", null, emptyList()))))))))
+                            Transition("c", 1, 1.0f, State("k", null, emptyList())),
+                        ),
+                    ),
+                ),
+            ),
+        )
+    )
   }
 
   @Test
@@ -60,23 +68,28 @@ class TTAlergiaMergedAutomatonTest {
         TimedIOTrace(
             "z",
             listOf("a", "b", "c").zip(listOf(1.seconds, 2.seconds, 3.seconds)).zip(
-                listOf("i", "j", "k")) { input, time, output ->
-                  TimedIO(time, input, output)
-                })
+                listOf("i", "j", "k")
+            ) { input, time, output ->
+              TimedIO(time, input, output)
+            },
+        )
     val trace2 =
         TimedIOTrace(
             "z",
             listOf("a", "b", "d").zip(listOf(1.seconds, 4.seconds, 3.seconds)).zip(
-                listOf("i", "j", "l")) { input, time, output ->
-                  TimedIO(time, input, output)
-                })
+                listOf("i", "j", "l")
+            ) { input, time, output ->
+              TimedIO(time, input, output)
+            },
+        )
 
     val automaton =
         RTIOAlergiaMergedAutomaton(
             TimedFrequencyPTA<String, String>("z").apply {
               addWord(trace1)
               addWord(trace2)
-            })
+            }
+        )
 
     automaton.assertAutomatonStructure(
         State(
@@ -105,7 +118,13 @@ class TTAlergiaMergedAutomatonTest {
                                 1,
                                 1.0f,
                                 State("l", null, emptyList()),
-                            )))))))
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        )
+    )
   }
 
   @Test
@@ -115,13 +134,15 @@ class TTAlergiaMergedAutomatonTest {
             "z",
             List(3) { "a" }
                 .zip(List(3) { 1.seconds })
-                .zip(List(3) { "z" }) { input, time, output -> TimedIO(time, input, output) })
+                .zip(List(3) { "z" }) { input, time, output -> TimedIO(time, input, output) },
+        )
 
     val automaton =
         RTIOAlergiaMergedAutomaton(TimedFrequencyPTA<String, String>("z").apply { addWord(trace) })
 
     automaton.assertAutomatonStructure(
-        State("z", 1.seconds, List(3) { 1.seconds }, Transition("a", 3, 1.0f, KnownState(0, "z"))))
+        State("z", 1.seconds, List(3) { 1.seconds }, Transition("a", 3, 1.0f, KnownState(0, "z")))
+    )
   }
 
   @Test
@@ -131,7 +152,8 @@ class TTAlergiaMergedAutomatonTest {
             "z",
             List(100) { "a" }
                 .zip(listOf(100_000.days, 100_000.days, 1.seconds))
-                .zip(List(100) { "z" }) { input, time, output -> TimedIO(time, input, output) })
+                .zip(List(100) { "z" }) { input, time, output -> TimedIO(time, input, output) },
+        )
 
     val automaton =
         RTIOAlergiaMergedAutomaton(
@@ -139,7 +161,8 @@ class TTAlergiaMergedAutomatonTest {
               addWord(trace)
               addWord(trace)
               addWord(trace)
-            })
+            }
+        )
 
     automaton.assertAutomatonStructure(
         State(
@@ -162,7 +185,13 @@ class TTAlergiaMergedAutomatonTest {
                             "z",
                             1.seconds,
                             List(3) { 1.seconds },
-                            Transition("a", 3, 1.0f, KnownState(0, "z"))))))))
+                            Transition("a", 3, 1.0f, KnownState(0, "z")),
+                        ),
+                    ),
+                ),
+            ),
+        )
+    )
   }
 
   @Test
@@ -172,7 +201,8 @@ class TTAlergiaMergedAutomatonTest {
             "z",
             List(3) { "a" }
                 .zip(listOf(100_000.days, 100_000.days, 1.seconds))
-                .zip(List(3) { "z" }) { input, time, output -> TimedIO(time, input, output) })
+                .zip(List(3) { "z" }) { input, time, output -> TimedIO(time, input, output) },
+        )
 
     val automaton =
         RTIOAlergiaMergedAutomaton(
@@ -181,14 +211,17 @@ class TTAlergiaMergedAutomatonTest {
               addWord(trace)
               addWord(trace)
             },
-            timingSimilaritySignificanceDecay = 0.0)
+            timingSimilaritySignificanceDecay = 0.0,
+        )
 
     automaton.assertAutomatonStructure(
         State(
             "z",
             (100_000.days * 2 / 3 + 1.seconds * 1 / 3),
             List(6) { 100_000.days } + List(3) { 1.seconds },
-            Transition("a", 9, 1.0f, KnownState(0, "z"))))
+            Transition("a", 9, 1.0f, KnownState(0, "z")),
+        )
+    )
   }
 
   @Test
@@ -198,7 +231,8 @@ class TTAlergiaMergedAutomatonTest {
             "z",
             List(3) { "a" }
                 .zip(listOf(100_000.days, 100_000.days, 1.seconds))
-                .zip(listOf("z", "i", "z")) { input, time, output -> TimedIO(time, input, output) })
+                .zip(listOf("z", "i", "z")) { input, time, output -> TimedIO(time, input, output) },
+        )
 
     val automaton =
         RTIOAlergiaMergedAutomaton(
@@ -207,7 +241,8 @@ class TTAlergiaMergedAutomatonTest {
               addWord(trace)
               addWord(trace)
             },
-            timingSimilaritySignificanceDecay = 0.0)
+            timingSimilaritySignificanceDecay = 0.0,
+        )
 
     automaton.assertAutomatonStructure(
         State(
@@ -222,7 +257,11 @@ class TTAlergiaMergedAutomatonTest {
                     "i",
                     1.seconds,
                     List(3) { 1.seconds },
-                    Transition("a", 3, 1.0f, KnownState(0, "z")))),
-            Transition("a", 3, 0.5f, KnownState(0, "z"))))
+                    Transition("a", 3, 1.0f, KnownState(0, "z")),
+                ),
+            ),
+            Transition("a", 3, 0.5f, KnownState(0, "z")),
+        )
+    )
   }
 }

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+// SPDX-FileCopyrightText: 2025-2026 The Heat Pump Mining Authors, see AUTHORS.md
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -54,7 +54,7 @@ fun List<List<String>>.toRevisionScoreList(): RevisionScoreList {
 data class RevisionScoreResult(
     val logName: String,
     val revisionScore: Double,
-    val pathLikeliness: Double
+    val pathLikeliness: Double,
 ) {
   init {
     require(revisionScore in 0.0..1.0) { "revision score must be in [1, 0], is $revisionScore" }
@@ -107,7 +107,7 @@ fun List<List<String>>.toHittingPredictionList(): HittingPredictionList =
 data class HittingPredictionResult(
     val logName: String,
     val hasNoSinkStates: Boolean,
-    val predictionDeltas: List<Duration?>
+    val predictionDeltas: List<Duration?>,
 ) {
   companion object {
     const val DNF: String = "DNF"
@@ -140,7 +140,8 @@ fun List<String>.toHittingPredictionResult(): HittingPredictionResult {
       predictionErrors.toBoolean(),
       subListFrom(2)
           .filter { it.isNotEmpty() }
-          .map { if (it == DNF) null else Duration.parseIsoString(it) })
+          .map { if (it == DNF) null else Duration.parseIsoString(it) },
+  )
 }
 
 data class AverageWithStddev<T>(val average: T, val standardDeviation: T) {
@@ -215,7 +216,7 @@ data class EvaluationResult(
     val revisionScore: AverageWithStddev<Double>,
     val sinkStateAutomata: Int,
     val hittingTimeErrorRate: AverageWithStddev<Double>?,
-    val hittingTimeDelta: AverageWithStddev<Duration>?
+    val hittingTimeDelta: AverageWithStddev<Duration>?,
 ) {
 
   companion object {
@@ -228,24 +229,27 @@ data class EvaluationResult(
         automata: Collection<Automaton<*, I, *>>,
         inputs: Set<I>,
         revisionScores: Collection<RevisionScoreList>,
-        hittingTimes: Collection<HittingPredictionList>
+        hittingTimes: Collection<HittingPredictionList>,
     ): EvaluationResult {
       val states = AverageWithStddev.fromNumbers(automata.map { it.size() })
       val transitions = AverageWithStddev.fromNumbers(automata.map { it.countTransitions(inputs) })
       val revisionScore =
           AverageWithStddev.fromNumbers(
-              revisionScores.flatMap { it.map(RevisionScoreResult::revisionScore) })
+              revisionScores.flatMap { it.map(RevisionScoreResult::revisionScore) }
+          )
       val sinkStateAutomata = hittingTimes.count { it.first().hasSinkStates }
       val hittingTimeErrorRate =
           AverageWithStddev.fromNumbersOrNull(
               hittingTimes
                   .filter { it.hasNoSinkStates }
-                  .flatMap { it.map(HittingPredictionResult::predictionErrorRate) })
+                  .flatMap { it.map(HittingPredictionResult::predictionErrorRate) }
+          )
       val hittingTimeDelta =
           AverageWithStddev.fromDurationsOrNull(
               hittingTimes
                   .filter { it.hasNoSinkStates }
-                  .flatMap { it.flatMap(HittingPredictionResult::errorFreePredictions) })
+                  .flatMap { it.flatMap(HittingPredictionResult::errorFreePredictions) }
+          )
       return EvaluationResult(
           case,
           setup,
@@ -255,7 +259,8 @@ data class EvaluationResult(
           revisionScore,
           sinkStateAutomata,
           hittingTimeErrorRate,
-          hittingTimeDelta)
+          hittingTimeDelta,
+      )
     }
   }
 }
@@ -279,7 +284,8 @@ fun EvaluationResult.toRow(deltaUnit: DurationUnit?): List<String> =
         } ?: NA,
         hittingTimeDelta?.standardDeviation?.let {
           if (deltaUnit != null) "${it.toDouble(deltaUnit)}" else it.toIsoString()
-        } ?: NA)
+        } ?: NA,
+    )
 
 fun List<String>.toEvaluationResult(deltaUnit: DurationUnit?): EvaluationResult {
   require(size == 14)
@@ -310,12 +316,16 @@ fun List<String>.toEvaluationResult(deltaUnit: DurationUnit?): EvaluationResult 
       if (hittingTimeErrorsAverage == NA || hittingTimeErrorsStddev == NA) null
       else
           AverageWithStddev(
-              hittingTimeErrorsAverage.toDouble(), hittingTimeErrorsStddev.toDouble()),
+              hittingTimeErrorsAverage.toDouble(),
+              hittingTimeErrorsStddev.toDouble(),
+          ),
       if (hittingTimeDeltaAverage == NA || hittingTimeDeltaStddev == NA) null
       else
           AverageWithStddev(
               if (deltaUnit != null) hittingTimeDeltaAverage.toDouble().toDuration(deltaUnit)
               else Duration.parseIsoString(hittingTimeDeltaAverage),
               if (deltaUnit != null) hittingTimeDeltaStddev.toDouble().toDuration(deltaUnit)
-              else Duration.parseIsoString(hittingTimeDeltaStddev)))
+              else Duration.parseIsoString(hittingTimeDeltaStddev),
+          ),
+  )
 }

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+// SPDX-FileCopyrightText: 2025-2026 The Heat Pump Mining Authors, see AUTHORS.md
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -32,7 +32,7 @@ private fun <S, I, O> DeterministicFrequencyProbabilisticTimedInputOutputAutomat
 
 private fun <I, O> TimedIOTrace<I, O>.actualHittingTimes(
     prefixes: Iterable<TimedIOTrace<I, O>>,
-    targetOutputs: Set<O>
+    targetOutputs: Set<O>,
 ): List<HittingInformation<I, O>> {
   val hits =
       tail
@@ -53,7 +53,7 @@ private fun <S, I, O> DeterministicFrequencyProbabilisticTimedInputOutputAutomat
     word: TimedIOTrace<I, O>,
     samples: Int?,
     predictions: Map<S, Duration>,
-    targetOutputs: Set<O>
+    targetOutputs: Set<O>,
 ): List<HittingInformation<I, O>?> {
   val shortenedWord =
       word.tail.indexOfLast { it.output in targetOutputs }.let { word.subTraceTo(it + 1) }
@@ -66,11 +66,9 @@ private fun <S, I, O> DeterministicFrequencyProbabilisticTimedInputOutputAutomat
   check(estimated.size == correct.size)
 
   return (estimated zip correct).map { (e, c) ->
-    if (e == null) {
-      null
-    } else {
-      check(e.word == c.word)
-      HittingInformation(e.word, e.hittingTime - c.hittingTime)
+    e?.let {
+      check(it.word == c.word)
+      HittingInformation(it.word, it.hittingTime - c.hittingTime)
     }
   }
 }

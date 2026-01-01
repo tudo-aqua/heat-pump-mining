@@ -1,9 +1,10 @@
-// SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+// SPDX-FileCopyrightText: 2025-2026 The Heat Pump Mining Authors, see AUTHORS.md
 //
 // SPDX-License-Identifier: Apache-2.0
 
 package tools.aqua.hpm.automata
 
+import kotlin.math.roundToInt
 import net.automatalib.automaton.MutableAutomaton
 import net.automatalib.automaton.UniversalAutomaton
 import net.automatalib.automaton.concept.MutableProbabilistic
@@ -15,7 +16,10 @@ import net.automatalib.automaton.graph.UniversalAutomatonGraphView
 import net.automatalib.automaton.visualization.AutomatonVisualizationHelper
 import net.automatalib.graph.UniversalGraph
 import net.automatalib.visualization.VisualizationHelper
+import net.automatalib.visualization.VisualizationHelper.CommonAttrs.COLOR
 import net.automatalib.visualization.VisualizationHelper.CommonAttrs.LABEL
+import tools.aqua.hpm.util.average
+import tools.aqua.hpm.util.standardDeviation
 
 interface FrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, O> :
     UniversalAutomaton<S, I, T, TimedOutput<O>, FrequencyAndProbability>,
@@ -36,30 +40,80 @@ interface FrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, O> :
       S,
       TransitionEdge<I, T>,
       TimedOutput<O>,
-      TransitionEdge.Property<I, FrequencyAndProbability>> =
-      FrequencyProbabilisticTimedAutomatonGraphView(this, inputs)
+      TransitionEdge.Property<I, FrequencyAndProbability>,
+  > = FrequencyProbabilisticTimedAutomatonGraphView(this, inputs)
+
+  fun renderTransitionGraphView(
+      inputs: Collection<I>,
+      transitionFullColorMin: Double = 0.0,
+      transitionRenderMin: Double = 0.0,
+  ): UniversalGraph<
+      S,
+      TransitionEdge<I, T>,
+      TimedOutput<O>,
+      TransitionEdge.Property<I, FrequencyAndProbability>,
+  > =
+      FrequencyProbabilisticTimedAutomatonGraphView(
+          this,
+          inputs,
+          true,
+          transitionFullColorMin,
+          transitionRenderMin,
+      )
 }
 
 open class FrequencyProbabilisticTimedAutomatonGraphView<
-    S, I, T, O, A : FrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, O>>(
+    S,
+    I,
+    T,
+    O,
+    A : FrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, O>,
+>(
     automaton: A,
-    inputs: Collection<I>
+    inputs: Collection<I>,
+    private val simplify: Boolean = false,
+    private val transitionFullColorMin: Double = 0.0,
+    private val transitionRenderMin: Double = 0.0,
 ) :
     UniversalAutomatonGraphView<S, I, T, TimedOutput<O>, FrequencyAndProbability, A>(
-        automaton, inputs) {
+        automaton,
+        inputs,
+    ) {
   override fun getVisualizationHelper(): VisualizationHelper<S, TransitionEdge<I, T>> =
-      FrequencyProbabilisticTimedAutomatonVisualizationHelper(automaton)
+      FrequencyProbabilisticTimedAutomatonVisualizationHelper(
+          automaton,
+          simplify,
+          transitionFullColorMin,
+          transitionRenderMin,
+      )
 }
 
 open class FrequencyProbabilisticTimedAutomatonVisualizationHelper<
-    S, I, T, O, A : FrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, O>>(automaton: A) :
-    AutomatonVisualizationHelper<S, I, T, A>(automaton) {
+    S,
+    I,
+    T,
+    O,
+    A : FrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, O>,
+>(
+    automaton: A,
+    private val simplify: Boolean = false,
+    private val transitionFullColorMin: Double = 0.0,
+    private val transitionRenderMin: Double = 0.0,
+) : AutomatonVisualizationHelper<S, I, T, A>(automaton) {
 
   override fun getNodeProperties(node: S, properties: MutableMap<String, String>): Boolean {
     super.getNodeProperties(node, properties)
     val output = automaton.getStateOutput(node)
     val exitTimes = automaton.getExitTimes(node)
-    properties[LABEL] = "$output / t=${exitTimes.joinToString(", ", "[", "]")}"
+
+    val timeData =
+        if (simplify) {
+          "tAvg=${exitTimes.average()} / tSD=${exitTimes.standardDeviation()}"
+        } else {
+          "t=${exitTimes.joinToString(", ", "[", "]")}"
+        }
+
+    properties[LABEL] = "$output / $timeData"
     return true
   }
 
@@ -67,13 +121,27 @@ open class FrequencyProbabilisticTimedAutomatonVisualizationHelper<
       src: S,
       edge: TransitionEdge<I, T>,
       tgt: S,
-      properties: MutableMap<String, String>
+      properties: MutableMap<String, String>,
   ): Boolean {
     super.getEdgeProperties(src, edge, tgt, properties)
     val freq = automaton.getTransitionFrequency(edge.transition)
     val prob = automaton.getTransitionProbability(edge.transition)
-    properties[LABEL] = "${edge.input} / n=$freq / p=$prob"
-    return true
+
+    val probData =
+        if (simplify) {
+          "p=${"%.2f".format(prob)}"
+        } else {
+          "n=$freq / p=$prob"
+        }
+
+    properties[LABEL] = "${edge.input} / $probData"
+
+    if (prob in transitionRenderMin..<transitionFullColorMin) {
+      val saturation = (prob - transitionRenderMin) / (transitionFullColorMin - transitionRenderMin)
+      properties[COLOR] = "#${(255 * saturation).roundToInt().toByte().toHexString().repeat(3)}"
+    }
+
+    return prob >= transitionRenderMin
   }
 }
 

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+// SPDX-FileCopyrightText: 2025-2026 The Heat Pump Mining Authors, see AUTHORS.md
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -27,7 +27,7 @@ fun <S, I> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S, I, *,
     .computeMeanHittingTimes(
     input: I,
     hitTargets: Set<S>,
-    parallel: Boolean = false
+    parallel: Boolean = false,
 ): Map<S, Duration> {
   require(hitTargets.isNotEmpty()) { "hit targets are empty" }
 
@@ -70,9 +70,13 @@ fun <S, I, T> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S, I,
                         .map { transition ->
                           mkMul(
                               mkReal(getTransitionProbability(transition).toString()),
-                              stateTimes.getValue(getSuccessor(transition)))
+                              stateTimes.getValue(getSuccessor(transition)),
+                          )
                         }
-                        .toTypedArray<Expr<RealSort>>())))
+                        .toTypedArray<Expr<RealSort>>(),
+                ),
+            )
+        )
       }
       check(check() == SATISFIABLE) { "solver failed to find a valuation" }
       val model = model

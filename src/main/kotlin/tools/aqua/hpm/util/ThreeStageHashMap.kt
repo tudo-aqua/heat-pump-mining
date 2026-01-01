@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+// SPDX-FileCopyrightText: 2025-2026 The Heat Pump Mining Authors, see AUTHORS.md
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -47,7 +47,7 @@ operator fun <K1, K2, K3, V : Any> ThreeStageHashMap<K1, K2, K3, V>.set(
     key1: K1,
     key2: K2,
     key3: K3,
-    value: V
+    value: V,
 ) {
   put(key1, key2, key3, value)
 }

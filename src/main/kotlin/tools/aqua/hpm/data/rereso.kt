@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+// SPDX-FileCopyrightText: 2025-2026 The Heat Pump Mining Authors, see AUTHORS.md
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -11,7 +11,7 @@ data class LogName(
     val processing: String,
     val isDiscrete: Boolean,
     val event: String,
-    val changePointSplit: Int
+    val changePointSplit: Int,
 ) {
   val isContinuous: Boolean
     get() = !isDiscrete

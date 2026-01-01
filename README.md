@@ -1,5 +1,5 @@
 <!--
-  SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+  SPDX-FileCopyrightText: 2025-2026 The Heat Pump Mining Authors, see AUTHORS.md
 
   SPDX-License-Identifier: CC-BY-4.0
   -->
@@ -8,11 +8,12 @@
 
 This repository contains the HPM tools for
 
-1. Trace selection and merging
-2. Learning
-3. Validation
-
-plus an additional format converter.
+1. Automaton and SubCSL synthesis
+2. Trage generation
+3. Data import from Nibe ZIP format
+4. Trace selection and merging
+5. Learning
+6. Validation.
 
 ## Project
 
@@ -43,81 +44,234 @@ Style is enforced via Spotless and wrapped inside Gradle's testing machinery:
 When properly installed via the artifact created by jpackage or inside the singularity container,
 the tool can be invoked as `heat-pump-mining [ARGS]`. Note that when running via Gradle or out of an
 IDE, only the arguments can be passed (i.e., `heat-pump-mining` is _not_ part of the normal
-parameters).
+parameters). The tools are documented in alphabetical order.
 
-### Converter
+Note that for trace databases, compression is automatically determined by the file name extension:
+`data.json.zst` is automatically (de-)coompressed using the Zstandard algorithm, `data.json.gz` uses
+Gzip, `data.json` is uncompressed, etc.
 
-Converts the change point detector's format to the JSON format used by this tool.
+### Hitting Time Computation
+
+This is a tool for validation that compares the hitting times predicted by an automaton to those in
+an actual trace and reports the resulting delta. The trace is split into prefix-suffix pairs with
+increasing prefix size. The prefix is then used to compute the current location in the automaton
+using Viterbi's algorithm. Then, a prediction for hitting certain events is made and compared to the
+data in the actual traces.
+
+Usage:
 
 ```shell
-heat-pump-mining convert-format -i NibeData_EventTrace_$number.zip -o nibe.json.zst
+heat-pump-mining compute-hitting-times <options>
 ```
+
+Options:
+
+- `--automaton automaton.dot` the automaton to use for predictions.
+- `--input traces.json.zst` the trace database.
+- `--output results.csv` results file, defaults to standard output.
+- `--init` prepend the initial state's output to the trace, required when used for learning.
+- `--parallel` enable multithreaded computation.
+- `--events event_1 event_2 …` the target events for hitting time prediction.
+- `--samples n` the number of prefix-suffix splits to perform.
+
+### Revision Score Computation
+
+A validation tool that computes the revision score for a given trace database, i.e., the agreement
+of the traces and the automaton under IOalergia's stochastic tests. This can operate in a pre-trace
+mode, in which a revision score is computed for each trace in the database and then averaged, and a
+global mode, in which a score is computed for all traces at once.
+
+Usage:
+
+```shell
+heat-pump-mining compute-revision-score <options>
+```
+
+Options:
+
+- `--automaton automaton.dot` the automaton to measure.
+- `--input traces.json.zst` the trace database.
+- `--output results.csv` results file, defaults to standard output.
+- `--init` prepend the initial state's output to the trace, required when used for learning.
+- one of `--single` (per-trace scoring), `--single-parallel` (multithreaded per-trace scoring), and
+  `--global` (global scoring).
+- `--frequency-weight n` score bias between frequencies and times, defaults to 0.5.
+
+### Convert Formats
+
+Converts the change point detector's format (Nibe ZIP) to the JSON format used by all other tools in
+this software.
+
+Usage:
+
+```shell
+heat-pump-mining convert-format <options>
+```
+
+Options:
+
+- `--input data.zip` input file.
+- `--output data.json.zst` converted file.
+
+### SubCSL Evaluation
+
+This evaluation tool measures the agreement of a given set of SubCSL formulas and a trace database
+using the approach for evaluating IOalergia.
+
+Usage:
+
+```shell
+heat-pump-mining evaluate-sub-csl <options>
+```
+
+Options:
+
+- `--sub-csl formulas.txt` formula file, each on a separate line.
+- `--traces traces.json.zst` trace database to use.
+- `--output results.txt` results file, defaults to standard output.
+
+### Automata Generator
+
+This tool uses a naive random generation approach to create a family of automata. The algorithm
+ensures that for each output, one state exists, and that the resulting automaton is deterministic.
+
+Usage:
+
+```shell
+heat-pump-mining generate-automata <options>
+```
+
+Options:
+
+- `--output automaton.dot` target file pattern; each generated automaton is suffixed with `-n`.
+- `--automata n` number of automata to generate, defaults to one.
+- `--alphabet o_1 o_2 …` the output alphabet to use.
+- `--min-size n --max-size m` defines the range of states to generate.
+- `--min-exit-time n --max-exit-time m` defines the range of exit times to generate.
+- `--seed n` defines the generation seed, defaults to zero.
+
+### SubCSL Generator
+
+This tool randomly generates a set of SubCSL formulas. Each formula contains a temporal operator and
+propositional components of confugurable depth.
+
+Usage:
+
+```shell
+heat-pump-mining generate-sub-csl <options>
+```
+
+Options:
+
+- `--output formulas.txt` target file.
+- `--formulas n` number of formulas to generate, defaults to one.
+- `--alphabet o_1 o_2 …` the output alphabet to use.
+- `--leaf-probability n` the probability that in each generation step for a propositional
+  sub-formula, a literal is created. Lower values yield more complex formulas.
+- `--min-duration n --max-duration m` defines the range of acceptable durations for the temporal
+  operator to generate.
+- `--seed n` defines the generation seed, defaults to zero.
+
+### Trace Generator
+
+Generate random traces from a given automaton.
+
+Usage:
+
+```shell
+heat-pump-mining generate-traces <options>
+```
+
+Options:
+
+- `--automaton automaton.dot` the automaton to generate traces from.
+- `--output traces.json.zst` the trace database to generate.
+- `--traces n` the number of traces to generate, defaults to one.
+- `--mean-length n` the mean length of generated traces, defaults to 100.
+- `--length-stddev n` standard deviation of lengths, defaults to zero.
+- either `--normal-distribution` or `--exponential-distribution` to select the distribution of exit
+  times to assume.
+- one of `--nanoseconds`, `--microseconds`, `--milliseconds`, `--seconds`, `--minutes`, `--hours`,
+  or `--days` to determine the precision used in exit time generation. This should roughly match the
+  scale of the automaton's exit times.
+- `--seed n` defines the generation seed, defaults to zero.
+
+### Learn
+
+Run the RTIOAlergia algorithm on a given trace database to obtain a matching automaton. If the input
+traces do not have the same starting event, a canonical start event is selected and all traces with
+a different event are ignored. Alternatively, an additional init event can be prepended to every
+trace. Note that this must be accounted for when using the automaton!
+
+Usage:
+
+```shell
+heat-pump-mining learn <options>
+```
+
+Options:
+
+- `--input traces.json.zst` the trace database to learn from.
+- `--output automaton.dot` learned automaton.
+- `--init` or `--init value` prepend an initial event to every trace (default: `$init`). This avoids
+  ignoring of traces.
+- `--blue-state-order order` one of `CANONICAL_ORDER`, `LEX_ORDER`, `FIFO_ORDER`, and `LIFO_ORDER`;
+  determines the order in which blue states are processed. Defaults to lexicographic.
+- `--parallel` multithreaded checking of merge eligibility.
+- `--nondeterministic` sacrifice determinism for faster merging (not recommended).
+- `--frequency-epsilon e` the merge eligibility bound for frequency similarity, higher is stricter.
+  Defaults to 0.05.
+- `--frequency-epsilon-decay z` the merge eligibility bound decay for frequency similarity. Defaults
+  to one (disabled).
+- `--timing-epsilon e` the merge eligibility bound for timing similarity, higher is stricter.
+  Defaults to 0.05.
+- `--timing-epsilon-decay z` the merge eligibility bound decay for timing similarity. Defaults to
+  one (disabled).
+- `--tail-length k` disable stochastic tests in a certain recursive merge depth. Disabled by
+  default.
+- `--consider-merged` perform stochastic tests on the _merged_ automaton, not the PTA's data.
+  Stochastically unsound, but helpful for sparse traces.
+
+### Pretty Printer
+
+This tool pretty-prints an automaton into a shorted, more huma-readable expression. The new
+automaton _cannot_ be used by any tool in this software, but can be rendered using Graphviz. The
+automaton only retains probabilities and average exit times, but no individual measurements.
+Additionally, transitions can be color-graded based on their probabilities.
+
+Usage:
+
+```shell
+heat-pump-mining render-automaton <options>
+```
+
+Options:
+
+- `--input automaton.dot` the input automaton.
+- `--output neat.dot` the rendered automaton.
+- `--full-color-min i` the probability above which a transition is rendered in black. Transitions
+  below this are rendered in grayscale proportional to their likeliness. Defaults to zero.
+- `--render-min i` the minimum probability to render a transition at all. Defaults to zero.
 
 ### Select and Merge
 
 Selects a subset of events from the inputs. This requires a key event and a list of events. It then
 uses the change points detected for the key event to segment the trace resulting from the
-combination of all selected events. The change points for non-key events are ignored. If the option
-`-f` is set, only one trace corresponding to key change 0 is created, if `-a` is set, each trace is
-converted ( continuing to the end), and if `-n` is set, each trace is shortened to the beginning of
-the next trace and converted ( the default setting).
+combination of all selected events. The change points for non-key events are ignored.
+
+Usage:
 
 ```shell
-heat-pump-mining select-and-merge -i nibe.json.zst -o selected.json.zst -e event1 event2 ... -s key_event
+heat-pump-mining select-and-merge <options>
 ```
 
-### Generate Traces
+Options:
 
-Generate random traces from a given automaton. The number of traces can be controlled via `-n`. The
-length is selected from a normal distribution from the mean `-l`, the standard deviation `-L`, and
-the optional seed `-s` (default `0`).
-
-```shell
-heat-pump-mining generate-traces -a examples.dot -o traces.json.zst -n 100 -l 1000 -L 22.5
-```
-
-### Learn
-
-Run the RTIOAlergia algorithm on a given JSON trace database, ignoring all traces that do not have
-the initial trace's starting output. This accepts multiple options affecting the algorithm's
-behavior:
-
-- `-b` changes the blue state selection for the Blue-Fringe component. Defaults to `LEX_ORDER`.
-- `-p` runs the merge search in parallel (off by default).
-- `-d` ensures that the merge search result is deterministic (active by default).
-- `-f` selects the transition similarity levels required for merges. Between 0 and 1, defaults to
-  0.05. 0 disables the test, 1 always fails. This corresponds to _half_ the Hoeffding bound.
-- `-fd` determines the decay of `-f` when exploring successive merges per step. Between 0 and 1,
-  defaults to 1. 0 corresponds to the simplified Alergia algorithm, 1 to Alergia.
-- `-t` and `-td` are the same for the timing similarity required (i.e., f-Test significance).
-- `-T` can be used to enable a k-tails-like mode in which `-f` and `-t` are forced to 0 after the
-  selected number of steps.
-- `-m` performs all statistical tests on the current merged form of a state. This is statistically
-  unsound, but may perform better on limited data.
-
-```shell
-heat-pump-mining learn -i selected.json.zst -o nibe.dot
-```
-
-### Validate Revision Score
-
-This measures a learned automaton's performance on all traces of a database using the revision score
-metric. Two measures are computed: revision score (i.e., inverse significances of the trace
-observations and the automaton's) and trace likeliness. Note that the latter is usually rounded down
-to zero for longer traces. The option `-f` can be used to shift the revision score weight towards
-transition likeliness; default is 0.5 (even weight). `-n` removes a normalization from the trace
-likeliness, resulting in slightly larger result values.
-
-```shell
-heat-pump-mining validate-revision-score -a nibe.dot -i validation.json.zst
-```
-
-### Validate Hitting Time Prediction
-
-This measures a learned automaton's performance on all traces of a database w.r.t. mean hitting
-times errors. The events for which hitting times should be checked must be given via the `-e`
-option.
-
-```shell
-heat-pump-mining validate-hitting-times -a nibe.dot -i validation.json.zst -e d/event_defrost_0.0 d/event_defrost_2.0
-```
+- `--input data.json.zst` the input database from a `creat-format` invocation.
+- `--output traces.json.zst` the merged trace database.
+- `--events e_1 e_2 …` the events to include.
+- `--split-event e` the key event.
+- one of `--use-only-first` (only use the 0th trace, creating one long trace),
+  `--use-all-overlapping` (use all traces as is, yielding redundant data), and
+  `use-all-non-overlapping` (segment the sub-traces, yielding many non-overlapping traces;
+  recommended default).

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+// SPDX-FileCopyrightText: 2025-2026 The Heat Pump Mining Authors, see AUTHORS.md
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -12,7 +12,7 @@ import tools.aqua.hpm.util.TwoStageHashMap
 private class PTATransition<I, O>(
     override val source: PTANode<I, O>,
     override val input: I,
-    output: O
+    output: O,
 ) : FrequencyTransition<PTANode<I, O>, I> {
   override val target: PTANode<I, O> = PTANode.child(this, output)
 
@@ -70,7 +70,8 @@ class TimedFrequencyPTA<I, O>(rootOutput: O) :
         TimedFrequencyTreeNode<I, O, *>,
         I,
         FrequencyTransition<TimedFrequencyTreeNode<I, O, *>, I>,
-        O> {
+        O,
+    > {
 
   private val rootMutable: PTANode<I, O> = PTANode.root(rootOutput)
 
@@ -88,8 +89,9 @@ class TimedFrequencyPTA<I, O>(rootOutput: O) :
 
   override fun getStates(): Collection<TimedFrequencyTreeNode<I, O, *>> =
       DeepRecursiveFunction<
-          Pair<PTANode<I, O>, MutableSet<PTANode<I, O>>>, MutableSet<PTANode<I, O>>> {
-          (node, collect) ->
+          Pair<PTANode<I, O>, MutableSet<PTANode<I, O>>>,
+          MutableSet<PTANode<I, O>>,
+      > { (node, collect) ->
         collect += node
         node.transitions.forEach { callRecursive(it.target to collect) }
         collect
@@ -106,14 +108,14 @@ class TimedFrequencyPTA<I, O>(rootOutput: O) :
 
   override fun getTransitions(
       state: TimedFrequencyTreeNode<I, O, *>,
-      input: I
+      input: I,
   ): Collection<FrequencyTransition<TimedFrequencyTreeNode<I, O, *>, I>> =
       state.getTransitions(input)
 
   override fun getTransition(
       state: TimedFrequencyTreeNode<I, O, *>,
       input: I,
-      output: O
+      output: O,
   ): FrequencyTransition<TimedFrequencyTreeNode<I, O, *>, I>? =
       state.getTransitionOrNull(input, output)
 

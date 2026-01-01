@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+// SPDX-FileCopyrightText: 2025-2026 The Heat Pump Mining Authors, see AUTHORS.md
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -148,7 +148,8 @@ spotless {
     target("buildSrc/*.gradle.kts")
     licenseHeader(
         apache20.asCppComments(),
-        "(import |@file|plugins |dependencyResolutionManagement|rootProject.name)")
+        "(import |@file|plugins |dependencyResolutionManagement|rootProject.name)",
+    )
     ktfmt()
   }
   format("markdown") {
@@ -176,7 +177,8 @@ spotless {
                 "plugins" to listOf("prettier-plugin-properties"),
                 "parser" to "dot-properties",
                 "printWidth" to 100,
-            ))
+            )
+        )
   }
   shell {
     target("scripts/*.sh")
@@ -196,7 +198,8 @@ spotless {
                 "parser" to "toml",
                 "alignComments" to false,
                 "printWidth" to 100,
-            ))
+            )
+        )
   }
   yaml {
     target(".github/**/*.yml")
@@ -227,8 +230,6 @@ val kdocJar by
 
 val kdoc =
     configurations.consumable("kdocElements") {
-      isVisible = false
-
       attributes {
         attribute(CATEGORY_ATTRIBUTE, objects.named(DOCUMENTATION))
         attribute(USAGE_ATTRIBUTE, objects.named(JAVA_RUNTIME))

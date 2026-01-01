@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+// SPDX-FileCopyrightText: 2025-2026 The Heat Pump Mining Authors, see AUTHORS.md
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -29,7 +29,8 @@ fun importSplitNibe2Data(archive: Path): LogArchive =
           zip.entries
               .toList()
               .filter { it.name.endsWith(".csv") }
-              .mapToSet { readTrace(zip.getInputStream(it), it.name.removeSuffix(".csv")) })
+              .mapToSet { readTrace(zip.getInputStream(it), it.name.removeSuffix(".csv")) },
+      )
     }
 
 private fun readTrace(input: InputStream, name: String): Log =
@@ -46,15 +47,15 @@ private fun readTrace(input: InputStream, name: String): Log =
           lines.map { (timestamp, event) ->
             LogEntry(event, relativeStart = timestamp - firstTimestamp)
           },
-          epoch = firstTimestamp)
+          epoch = firstTimestamp,
+      )
     }
 
-private fun String.asUnixTimestamp(): Instant {
-  return toLongOrNull()?.let(Instant::fromEpochSeconds)
-      ?: toDoubleOrNull()?.let {
-        val seconds = it.toLong()
-        val subSeconds = it.rem(1.0)
-        Instant.fromEpochSeconds(seconds, (subSeconds * 1.seconds.inWholeNanoseconds).toLong())
-      }
-      ?: throw IllegalArgumentException("unrecognized timestamp '$this'")
-}
+private fun String.asUnixTimestamp(): Instant =
+    toLongOrNull()?.let(Instant::fromEpochSeconds)
+        ?: toDoubleOrNull()?.let {
+          val seconds = it.toLong()
+          val subSeconds = it.rem(1.0)
+          Instant.fromEpochSeconds(seconds, (subSeconds * 1.seconds.inWholeNanoseconds).toLong())
+        }
+        ?: throw IllegalArgumentException("unrecognized timestamp '$this'")

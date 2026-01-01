@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+// SPDX-FileCopyrightText: 2025-2026 The Heat Pump Mining Authors, see AUTHORS.md
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -21,7 +21,7 @@ fun summarizeResults(
     cases: List<String>,
     rounds: Int,
     setups: List<String>,
-    trainingSizes: List<Int>
+    trainingSizes: List<Int>,
 ): EvaluationResultList =
     cases
         .flatMap { case ->
@@ -43,7 +43,8 @@ fun summarizeResults(
                   automata,
                   setOf(input),
                   revisionScores,
-                  hittingPredictions)
+                  hittingPredictions,
+              )
             }
           }
         }
@@ -54,9 +55,11 @@ private fun automatonAndInput(
     case: String,
     round: Int,
     setup: String,
-    learningSize: Int
+    learningSize: Int,
 ): Pair<
-    DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<*, String, *, String>, String> =
+    DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<*, String, *, String>,
+    String,
+> =
     dfptioParser.readModel((baseDirectory / "$case-$round-$setup-$learningSize.dot").toFile()).let {
       it.model to it.alphabet.single()
     }
@@ -66,7 +69,7 @@ private fun revisionScores(
     case: String,
     round: Int,
     setup: String,
-    learningSize: Int
+    learningSize: Int,
 ): RevisionScoreList =
     csvReader().open((baseDirectory / "$case-$round-$setup-$learningSize-revision.csv").toFile()) {
       readAllAsSequence().toList().toRevisionScoreList()
@@ -77,7 +80,7 @@ private fun hittingPredictions(
     case: String,
     round: Int,
     setup: String,
-    learningSize: Int
+    learningSize: Int,
 ): HittingPredictionList =
     csvReader().open((baseDirectory / "$case-$round-$setup-$learningSize-times.csv").toFile()) {
       readAllAsSequence().toList().toHittingPredictionList()

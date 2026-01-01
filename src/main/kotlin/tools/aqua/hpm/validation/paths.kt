@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+// SPDX-FileCopyrightText: 2025-2026 The Heat Pump Mining Authors, see AUTHORS.md
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -9,6 +9,19 @@ import tools.aqua.hpm.data.SimpleTrace
 import tools.aqua.hpm.data.TimedIOTrace
 import tools.aqua.hpm.data.lastState
 import tools.aqua.hpm.data.plus
+
+fun <S, I, T, O> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, O>
+    .getRootedPath(word: TimedIOTrace<I, O>): SimpleTrace<S, T>? {
+  val initial = getInitialState() ?: return null
+  if (getStateOutput(initial) != word.head) return null
+
+  return word.tail.fold(SimpleTrace(initial)) { trace, io ->
+    val (_, input, output) = io
+    val state = trace.lastState
+    val transition = getTransition(state, input, output) ?: return null
+    trace + (transition to getSuccessor(transition))
+  }
+}
 
 fun <S, I, T, O> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, O>
     .getMatchingPaths(word: TimedIOTrace<I, O>): List<SimpleTrace<S, T>> {

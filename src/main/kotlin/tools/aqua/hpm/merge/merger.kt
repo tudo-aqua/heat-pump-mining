@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+// SPDX-FileCopyrightText: 2025-2026 The Heat Pump Mining Authors, see AUTHORS.md
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -16,7 +16,7 @@ import tools.aqua.rereso.util.mapToSet
 enum class SplitMode {
   ONLY_FIRST,
   EACH_FROM_START,
-  EACH_NON_OVERLAPPING
+  EACH_NON_OVERLAPPING,
 }
 
 fun LogArchive.selectAndMerge(
@@ -34,7 +34,8 @@ fun LogArchive.selectAndMerge(
   val epochs =
       logsWithName
           .filter { (_, name) -> name.event == useSplitFrom }
-          .map { (log, _) -> log.epoch!! } + DISTANT_FUTURE
+          .map { (log, _) -> log.epoch!! }
+          .sorted() + DISTANT_FUTURE
 
   return if (splitMode == ONLY_FIRST) {
     val log = selectAndMerge(includeEvents, "all", epochs.first(), DISTANT_FUTURE)
@@ -47,7 +48,8 @@ fun LogArchive.selectAndMerge(
               includeEvents,
               idx.toString(),
               epoch,
-              if (splitMode == EACH_FROM_START) DISTANT_FUTURE else end)
+              if (splitMode == EACH_FROM_START) DISTANT_FUTURE else end,
+          )
         }
     LogArchive("$name (merged)", logs)
   }
@@ -57,7 +59,7 @@ fun LogArchive.selectAndMerge(
     includeEvents: Set<String>,
     changePointSplit: String,
     epoch: Instant,
-    end: Instant
+    end: Instant,
 ): Log {
 
   val logsWithName = logs.map { it to it.hpmName }
@@ -73,7 +75,8 @@ fun LogArchive.selectAndMerge(
                 .map {
                   it.copy(
                       value = "${if (name.isContinuous) "c" else "d"}/${it.value}",
-                      relativeStart = it.start(log.epoch!!)!! - epoch)
+                      relativeStart = it.start(log.epoch!!)!! - epoch,
+                  )
                 }
           }
           .sortedBy { it.start(epoch)!! }

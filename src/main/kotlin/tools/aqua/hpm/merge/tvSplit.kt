@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+// SPDX-FileCopyrightText: 2025-2026 The Heat Pump Mining Authors, see AUTHORS.md
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -16,13 +16,13 @@ import tools.aqua.rereso.util.mapToSet
 
 data class TrainingAndValidation(
     val trainingArchives: Collection<LogArchive>,
-    val validationArchive: LogArchive
+    val validationArchive: LogArchive,
 )
 
 fun LogArchive.validationSplit(
     rounds: Int,
     validationShare: Double = 0.5,
-    seed: Long = 0
+    seed: Long = 0,
 ): Collection<TrainingAndValidation> {
   val random = Random(seed)
   require(rounds > 0) { "rounds must be at least one, is $rounds" }

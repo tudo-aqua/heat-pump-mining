@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+// SPDX-FileCopyrightText: 2025-2026 The Heat Pump Mining Authors, see AUTHORS.md
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -22,7 +22,7 @@ fun <I, O> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<*, I, *,
     input: I,
     distribution: TimingDistribution,
     precision: DurationUnit,
-    random: Random
+    random: Random,
 ): List<TimedIOTrace<I, O>> {
   check(lengthSD >= 0) { "standard deviation of length must be positive, is $lengthSD" }
   val lengths =
@@ -42,7 +42,7 @@ fun <I, O> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<*, I, *,
     input: I,
     distribution: TimingDistribution,
     precision: DurationUnit,
-    random: Random
+    random: Random,
 ): TimedIOTrace<I, O> = generateTrace(length, mapOf(input to 1), distribution, precision, random)
 
 fun <S, I, T, O> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, O>
@@ -51,7 +51,7 @@ fun <S, I, T, O> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S,
     weightedInputs: Map<I, Number>,
     distribution: TimingDistribution,
     precision: DurationUnit,
-    random: Random
+    random: Random,
 ): TimedIOTrace<I, O> {
   val initial = initialStates.random(random)
   var state = initial

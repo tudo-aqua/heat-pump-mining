@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+// SPDX-FileCopyrightText: 2025-2026 The Heat Pump Mining Authors, see AUTHORS.md
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -14,14 +14,16 @@ import tools.aqua.rereso.log.LogEntry
 fun <I, O> TimedIOTrace<I, O>.toQuery(): DefaultQuery<I, Word<Pair<Duration, O>>> =
     DefaultQuery<I, Word<Pair<Duration, O>>>(
         Word.fromList(tail.map { it.input }),
-        Word.fromList(listOf(ZERO to head) + tail.map { it.time to it.output }))
+        Word.fromList(listOf(ZERO to head) + tail.map { it.time to it.output }),
+    )
 
 fun <T> Log.toTimedIOTrace(inputSymbol: T): TimedIOTrace<T, String> =
     TimedIOTrace(
         entries.first().value,
         entries.zipWithNext().map { (past, current) ->
           TimedIO(current.relativeStart!! - past.relativeStart!!, inputSymbol, current.value)
-        })
+        },
+    )
 
 fun TimedIOTrace<*, String>.toLog(): Log =
     Log(
@@ -33,4 +35,5 @@ fun TimedIOTrace<*, String>.toLog(): Log =
                     this += LogEntry(output, relativeStart = time + runningTime)
                     runningTime += time
                   }
-                })
+                }
+    )

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+// SPDX-FileCopyrightText: 2025-2026 The Heat Pump Mining Authors, see AUTHORS.md
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -17,7 +17,7 @@ fun hoeffdingTest(
     totalFrequency1: Int,
     frequency2: Int,
     totalFrequency2: Int,
-    epsilon: Double
+    epsilon: Double,
 ): Boolean {
   require(epsilon in 0.0..1.0) { "epsilon must be in [0, 1], is $epsilon" }
   return if (totalFrequency1 == 0 || totalFrequency2 == 0) {
@@ -31,7 +31,7 @@ fun hoeffdingSimilarity(
     frequency1: Int,
     totalFrequency1: Int,
     frequency2: Int,
-    totalFrequency2: Int
+    totalFrequency2: Int,
 ): Double =
     when {
       totalFrequency1 == 0 && totalFrequency2 == 0 -> 1.0
@@ -43,7 +43,7 @@ fun hoeffdingSignificance(
     frequency1: Int,
     totalFrequency1: Int,
     frequency2: Int,
-    totalFrequency2: Int
+    totalFrequency2: Int,
 ): Double {
   require(0 < totalFrequency1) { "n1 must be strictly positive, is $totalFrequency1" }
   require(frequency1 <= totalFrequency1) { "f1 must be leq n1, is $frequency1 > $totalFrequency1" }
@@ -65,7 +65,7 @@ fun fTest(
     redSupport: Int,
     blueAverage: Duration,
     blueSupport: Int,
-    epsilon: Double
+    epsilon: Double,
 ): Boolean {
   require(epsilon >= 0) { "epsilon must be positive, is $epsilon" }
   if (redSupport <= 1 || blueSupport <= 2) return true
@@ -76,7 +76,7 @@ fun fTestSignificance(
     redAverage: Duration,
     redSupport: Int,
     blueAverage: Duration,
-    blueSupport: Int
+    blueSupport: Int,
 ): Double =
     if (redAverage == ZERO && blueAverage == ZERO) {
       POSITIVE_INFINITY
@@ -88,7 +88,7 @@ fun fTestSimilarity(
     redAverage: Duration,
     redSupport: Int,
     blueAverage: Duration,
-    blueSupport: Int
+    blueSupport: Int,
 ): Double =
     when {
       redSupport <= 1 || blueSupport <= 2 -> 1.0

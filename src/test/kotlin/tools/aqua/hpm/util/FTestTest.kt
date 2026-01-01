@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025-2025 The Heat Pump Mining Authors, see AUTHORS.md
+// SPDX-FileCopyrightText: 2025-2026 The Heat Pump Mining Authors, see AUTHORS.md
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -31,7 +31,7 @@ internal class FTestTest {
       redSupport: Int,
       blueAverage: Int,
       blueSupport: Int,
-      epsilon: Double
+      epsilon: Double,
   ) {
     val redBlueAverageRatio = (redAverage.toDouble() / blueAverage.toDouble())
     assertThat(fTestSignificance(redBlueAverageRatio, redSupport, blueSupport))
@@ -45,7 +45,7 @@ internal class FTestTest {
       redSupport: Int,
       blueAverage: Int,
       blueSupport: Int,
-      epsilon: Double
+      epsilon: Double,
   ) {
     assertThat(fTestSimilarity(redAverage.seconds, redSupport, blueAverage.seconds, blueSupport))
         .isCloseTo(epsilon, 0.1.percent)
@@ -73,10 +73,11 @@ internal class FTestTest {
       redSupport: Int,
       blueAverage: Int,
       blueSupport: Int,
-      epsilon: Double
+      epsilon: Double,
   ) {
     assertThat(
-            fTest(redAverage.seconds, redSupport, blueAverage.seconds, blueSupport, epsilon * 1.01))
+            fTest(redAverage.seconds, redSupport, blueAverage.seconds, blueSupport, epsilon * 1.01)
+        )
         .isFalse
   }
 
@@ -87,10 +88,11 @@ internal class FTestTest {
       redSupport: Int,
       blueAverage: Int,
       blueSupport: Int,
-      epsilon: Double
+      epsilon: Double,
   ) {
     assertThat(
-            fTest(redAverage.seconds, redSupport, blueAverage.seconds, blueSupport, epsilon * 0.99))
+            fTest(redAverage.seconds, redSupport, blueAverage.seconds, blueSupport, epsilon * 0.99)
+        )
         .isTrue
   }
 
