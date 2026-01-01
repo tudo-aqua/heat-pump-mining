@@ -34,27 +34,27 @@ jobs:
           DEBIAN_FRONTEND=noninteractive sudo apt-get install -fy
       - uses: gradle/actions/setup-gradle@v5
       - run: ./gradlew build kdocJar javadocJar sourcesJar runtimeZip singularityImage
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: JARs
           path: build/libs/*.jar
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: Distributions
           path: |
             build/distributions/*.tar
             build/distributions/*.zip
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: Image
           path: build/image.zip
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: Installers
           path: |
             build/jpackage/*.deb
             build/jpackage/*.rpm
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: Singluarity
           path: build/singularity/*.sif
