@@ -16,6 +16,7 @@ import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.long
 import com.github.ajalt.clikt.parameters.types.path
 import kotlin.io.path.bufferedWriter
+import kotlin.io.path.createParentDirectories
 import kotlin.random.Random
 import kotlin.time.Duration
 import tools.aqua.hpm.subcsl.SubCSLFormulaGenerator
@@ -39,7 +40,7 @@ class GenerateSubCSL : CliktCommand("generate-sub-csl") {
     val generator =
         SubCSLFormulaGenerator(alphabet, leafProbability, minDuration..maxDuration, Random(seed))
 
-    output.bufferedWriter().use { out ->
+    output.createParentDirectories().bufferedWriter().use { out ->
       generator.asSequence().take(nFormulas).forEach { out.appendLine(it.toString()) }
     }
   }

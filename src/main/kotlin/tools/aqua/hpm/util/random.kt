@@ -9,6 +9,7 @@ import kotlin.math.ln
 import kotlin.random.Random
 import kotlin.random.asJavaRandom
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.ZERO
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -34,5 +35,7 @@ fun Random.nextBigInteger(range: ClosedRange<BigInteger>): BigInteger {
 
 fun Random.nextDuration(range: ClosedRange<Duration>): Duration =
     (range.endInclusive - range.start).toComponents { s, ns ->
-      nextLong(s).seconds + nextInt(ns).nanoseconds
+      val seconds = if (s == 0L) ZERO else nextLong(s).seconds
+      val nanoseconds = if (ns == 0) ZERO else nextInt(ns).nanoseconds
+      seconds + nanoseconds
     } + range.start

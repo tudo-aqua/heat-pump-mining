@@ -38,7 +38,7 @@ class EvaluateSubCSL : CliktCommand("evaluate-sub-csl") {
                 val subCSL = line.toSubCSLFormula()
                 val nSatisfied =
                     traceDB.logs.count { it.requireChronological() satisfiesSubCSL subCSL }
-                println("$nSatisfied / ${traceDB.logs.size}")
+                println("$subCSL: $nSatisfied / ${traceDB.logs.size}")
                 nSatisfied.toDouble() / traceDB.logs.size.toDouble()
               }
               .average()

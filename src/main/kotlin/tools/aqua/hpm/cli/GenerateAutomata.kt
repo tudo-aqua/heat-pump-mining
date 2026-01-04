@@ -14,6 +14,8 @@ import com.github.ajalt.clikt.parameters.options.varargValues
 import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.long
 import com.github.ajalt.clikt.parameters.types.path
+import kotlin.io.path.Path
+import kotlin.io.path.createParentDirectories
 import kotlin.io.path.div
 import kotlin.io.path.extension
 import kotlin.io.path.nameWithoutExtension
@@ -49,8 +51,9 @@ class GenerateAutomata : CliktCommand() {
         )
 
     generator.asSequence().take(nAutomata).forEachIndexed { idx, automaton ->
-      val name = output.parent / "${output.nameWithoutExtension}-$idx.${output.extension}"
-      automaton.writeDot(name, setOf(ComparableUnit))
+      val name = "${output.nameWithoutExtension}-$idx.${output.extension}"
+      val path = if (output.parent != null) output.parent / name else Path(name)
+      automaton.writeDot(path.createParentDirectories(), setOf(ComparableUnit))
     }
   }
 }

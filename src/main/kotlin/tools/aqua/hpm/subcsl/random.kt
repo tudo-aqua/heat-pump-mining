@@ -18,8 +18,6 @@ class SubCSLFormulaGenerator<A>(
     private val random: Random,
 ) : Iterator<TrueSubCSLFormula<A>> {
 
-  private val trueRange = durationRange.endInclusive - durationRange.start
-
   init {
     require(leafProbability > 0.0 && leafProbability <= 1.0) {
       "leaf probability must be in (0, 1]"
@@ -31,19 +29,27 @@ class SubCSLFormulaGenerator<A>(
 
   override fun next(): TrueSubCSLFormula<A> =
       random.runOneOf(
-          { Until(generatePropositional(), generateDurationInterval(), generatePropositional()) },
-          { Finally(generateDurationInterval(), generatePropositional()) },
-          { Global(generateDurationInterval(), generatePropositional()) },
+          {
+            Until(
+                generatePropositional(Unit),
+                generateDurationInterval(),
+                generatePropositional(Unit),
+            )
+          },
+          { Finally(generateDurationInterval(), generatePropositional(Unit)) },
+          { Global(generateDurationInterval(), generatePropositional(Unit)) },
       )
 
   private fun generateDurationInterval(): ClosedRange<Duration> =
       random.nextDuration(durationRange) orderedRangeTo random.nextDuration(durationRange)
 
-  private fun generatePropositional(): PropositionalFormula<A> =
-      if (random.nextDouble() <= leafProbability) {
-            Output(alphabet.random(random))
-          } else {
-            Or(generatePropositional(), generatePropositional())
-          }
-          .let { if (random.nextBoolean()) it else Not(it) }
+  private val generatePropositional =
+      DeepRecursiveFunction<Unit, PropositionalFormula<A>> {
+        if (random.nextDouble() <= leafProbability) {
+              Output(alphabet.random(random))
+            } else {
+              Or(callRecursive(Unit), callRecursive(Unit))
+            }
+            .let { if (random.nextBoolean()) it else Not(it) }
+      }
 }

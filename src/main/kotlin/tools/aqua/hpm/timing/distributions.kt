@@ -13,7 +13,7 @@ import org.apache.commons.math3.distribution.ExponentialDistribution
 import org.apache.commons.math3.distribution.NormalDistribution
 import org.apache.commons.math3.random.Well19937c
 import tools.aqua.hpm.util.average
-import tools.aqua.hpm.util.standardDeviation
+import tools.aqua.hpm.util.standardDeviationOrNull
 
 fun interface TimingDistribution {
   fun sample(data: Collection<Duration>, precision: DurationUnit, random: Random): Duration
@@ -26,7 +26,7 @@ val exponential = TimingDistribution { data, precision, random ->
 }
 
 val normal = TimingDistribution { data, precision, random ->
-  val sd = data.standardDeviation()
+  val sd = data.standardDeviationOrNull() ?: ZERO
 
   if (sd == ZERO) {
     data.average()
