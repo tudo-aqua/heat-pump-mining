@@ -7,6 +7,10 @@ From: ubuntu:rolling
 
 %files
   build/jpackage/heat-pump-mining_0.0.0_amd64.deb /
+
+  scripts/evaluate-revision-score.sh /usr/local/bin/evaluate-revision-score
+
+  scripts/evaluate-from-database.sh /usr/local/bin/evaluate-db
   scripts/evaluate-from-database.sh /usr/local/bin/evaluate-db
   scripts/evaluate-from-automaton.sh /usr/local/bin/evaluate-dot
   scripts/evaluate-from-loop.sh /usr/local/bin/evaluate-loop
@@ -17,6 +21,6 @@ From: ubuntu:rolling
   export DEBIAN_FRONTEND=noninteractive
   apt-get update
   apt-get install -y --no-install-recommends ./heat-pump-mining_0.0.0_amd64.deb csvkit jq
-  rm -rf /var/lib/apt/lists/*
+  rm -rf /heat-pump-mining_0.0.0_amd64.deb /var/lib/apt/lists/*
 
   ln -s /opt/heat-pump-mining/bin/heat-pump-mining /usr/local/bin

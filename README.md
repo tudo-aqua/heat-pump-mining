@@ -129,7 +129,7 @@ Options:
 
 - `--sub-csl formulas.txt` formula file, each on a separate line.
 - `--traces traces.json.zst` trace database to use.
-- `--output results.txt` results file, defaults to standard output.
+- `--output results.csv` results file, defaults to standard output.
 
 ### Automata Generator
 
