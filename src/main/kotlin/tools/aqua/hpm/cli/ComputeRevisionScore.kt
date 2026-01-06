@@ -7,6 +7,7 @@ package tools.aqua.hpm.cli
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.options.check
 import com.github.ajalt.clikt.parameters.options.default
+import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.options.switch
@@ -18,20 +19,21 @@ import com.github.doyaaaaaken.kotlincsv.dsl.csvWriter
 import java.util.stream.Collectors
 import tools.aqua.hpm.automata.dfptioParser
 import tools.aqua.hpm.cli.ComputeRevisionScore.Mode.GLOBAL
-import tools.aqua.hpm.cli.ComputeRevisionScore.Mode.PARALLEL
-import tools.aqua.hpm.cli.ComputeRevisionScore.Mode.SINGLE
+import tools.aqua.hpm.cli.ComputeRevisionScore.Mode.SINGLE_BEST
+import tools.aqua.hpm.cli.ComputeRevisionScore.Mode.SINGLE_ROOTED
 import tools.aqua.hpm.data.rooted
 import tools.aqua.hpm.data.toTimedIOTrace
 import tools.aqua.hpm.util.standardDeviation
 import tools.aqua.hpm.validation.computeBestRevisionScore
 import tools.aqua.hpm.validation.computeGlobalRevisionScore
+import tools.aqua.hpm.validation.computeRootedRevisionScore
 import tools.aqua.rereso.log.LogArchive
 import tools.aqua.rereso.util.smartDecode
 
 class ComputeRevisionScore : CliktCommand() {
   enum class Mode {
-    SINGLE,
-    PARALLEL,
+    SINGLE_BEST,
+    SINGLE_ROOTED,
     GLOBAL,
   }
 
@@ -48,8 +50,13 @@ class ComputeRevisionScore : CliktCommand() {
   val initOutput by option("-I", "--init")
   val mode by
       option()
-          .switch("--single" to SINGLE, "--single-parallel" to PARALLEL, "--global" to GLOBAL)
+          .switch(
+              "--single-best" to SINGLE_BEST,
+              "--single-rooted" to SINGLE_ROOTED,
+              "--global" to GLOBAL,
+          )
           .default(GLOBAL)
+  val parallel by option("-p", "--parallel").flag("--single-threaded")
 
   val frequencyWeight by
       option("-f", "--frequency-weight").double().default(0.5).check { it in 0.0..1.0 }
@@ -70,10 +77,13 @@ class ComputeRevisionScore : CliktCommand() {
         if (mode != GLOBAL) {
           val singleResults =
               archive.logs
-                  .let { if (mode == PARALLEL) it.parallelStream() else it.stream() }
+                  .let { if (parallel) it.parallelStream() else it.stream() }
                   .map { log ->
                     val trace = log.toTimedIOTrace(inputSymbol)
-                    val score = automaton.computeBestRevisionScore(alphabet, trace, frequencyWeight)
+                    val score =
+                        if (mode == SINGLE_BEST)
+                            automaton.computeBestRevisionScore(alphabet, trace, frequencyWeight)
+                        else automaton.computeRootedRevisionScore(alphabet, trace, frequencyWeight)
                     log.name to score
                   }
                   .collect(Collectors.toList())
@@ -93,6 +103,9 @@ class ComputeRevisionScore : CliktCommand() {
         }
 
     csvWriter { lineTerminator = "\n" }
-        .open(output) { result.forEach { (name, value) -> writeRow(name, value) } }
+        .open(output) {
+          writeRow("log", "score")
+          result.forEach { (name, value) -> writeRow(name, value) }
+        }
   }
 }

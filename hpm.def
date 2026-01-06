@@ -15,6 +15,8 @@ From: ubuntu:rolling
 
 %post
   export DEBIAN_FRONTEND=noninteractive
-  apt-get install -y --no-install-recommends ./heat-pump-mining_0.0.0_amd64.deb
+  apt-get update
+  apt-get install -y --no-install-recommends ./heat-pump-mining_0.0.0_amd64.deb csvkit jq
+  rm -rf /var/lib/apt/lists/*
 
   ln -s /opt/heat-pump-mining/bin/heat-pump-mining /usr/local/bin

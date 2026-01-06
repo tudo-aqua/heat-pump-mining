@@ -26,6 +26,14 @@ fun <S, I, T, O> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S,
         ?: 0.0
 
 fun <S, I, T, O> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, O>
+    .computeRootedRevisionScore(
+    alphabet: Iterable<I>,
+    word: TimedIOTrace<I, O>,
+    frequencyWeight: Double = 0.5,
+): Double =
+    getRootedPath(word)?.let { computeRevisionScore(alphabet, word, it, frequencyWeight) } ?: 0.0
+
+fun <S, I, T, O> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, O>
     .computeRevisionScore(
     alphabet: Iterable<I>,
     word: TimedIOTrace<I, O>,
