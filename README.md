@@ -93,8 +93,8 @@ Options:
 - `--input traces.json.zst` the trace database.
 - `--output results.csv` results file, defaults to standard output.
 - `--init` prepend the initial state's output to the trace, required when used for learning.
-- one of `--single-best` (per-trace scoring with best trace root), `--single-rooted` (per-trace scoring with initial state root), and
-  `--global` (global scoring with initial state root).
+- one of `--single-best` (per-trace scoring with best trace root), `--single-rooted` (per-trace
+  scoring with initial state root), and `--global` (global scoring with initial state root).
 - - `--parallel` enable multithreaded computation, only for `--singlle` modes.
 - `--frequency-weight n` score bias between frequencies and times, defaults to 0.5.
 
