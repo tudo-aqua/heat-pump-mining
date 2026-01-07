@@ -5,6 +5,34 @@
 
 set -euxo pipefail
 
+n_automata="${1:-100}"
+states_min_factor="${2:-25}"
+states_max_factor="${2:-50}"
+n_formulas="${4:-1000}"
+n_traces="${5:-1000}"
+trace_length="${6:-10000}"
+
+compute_sub_csl_score() {
+  if [[ "$3" != "$4" ]]; then name="$3-$4"; else name="$3-self"; fi
+
+  csl_data="$(csvjoin -c formula "csl-results-$1-$3.csv" "csl-results-$1-$4.csv" |
+    csvgrep -c formula -im '<average>' |
+    csvcut -c 'formula,satisfactionShare,satisfactionShare2')"
+
+  echo "$(echo "$csl_data" | head -n1),delta" >"csl-score-e$2-$1-$name.csv"
+
+  echo "$csl_data" | tail -n+2 | while IFS='', read -r formula left right; do
+    echo -n "$formula,$left,$right,"
+    echo "$left $right $2" | awk -v OFMT='%f' '{ print ($1 - $2)^$3 }'
+  done >>"csl-score-e$2-$1-$name.csv"
+
+  mean_ss1="$(LC_ALL=C csvstat -c satisfactionShare --mean "csl-score-e$2-$1-$name.csv")"
+  mean_ss2="$(LC_ALL=C csvstat -c satisfactionShare2 --mean "csl-score-e$2-$1-$name.csv")"
+  mean_d="$(echo "$(LC_ALL=C csvstat -c delta --mean "csl-score-e$2-$1-$name.csv") $2" |
+    awk -v OFMT='%f' '{ print 1-$1^(1/$2) }')"
+  echo "<average>,$mean_ss1,$mean_ss2,$mean_d" >>"csl-score-e$2-$1-$name.csv"
+}
+
 compute_revision_score() {
   if [[ "$3" != "$4" ]]; then name="$3-$4"; else name="$3-self"; fi
   heat-pump-mining compute-revision-score \
@@ -14,29 +42,41 @@ compute_revision_score() {
     "${@:5}"
 }
 
+compute_comparison() {
+  if [[ "$4" != "$5" ]]; then name="$4-$5"; else name="$4-self"; fi
+
+  sub_csl_score="$(csvgrep -c formula -m '<average>' "csl-score-e$2-$1-$name.csv" |
+    csvcut -c delta |
+    tail -n+2)"
+  revision_score="$(csvgrep -c log -r '<global>|<average>' "revision-score-$3-$1-$name.csv" |
+    csvcut -c score |
+    tail -n+2)"
+  echo "$4,$5,$sub_csl_score,$revision_score"
+}
+
 run_evaluation() {
   heat-pump-mining generate-automata \
     --output "automaton-$1.dot" \
-    --automata 100 \
+    --automata "$n_automata" \
     --alphabet "${@:2}" \
-    --min-size $((("$#" - 1) * 25 / 3)) --max-size $((("$#" - 1) * 50 / 3)) \
+    --min-size $((("$#" - 1) * "$states_min_factor" / 3)) --max-size $((("$#" - 1) * "$states_max_factor" / 3)) \
     --min-exit-time 1m --max-exit-time 30m \
     --seed $#
 
   heat-pump-mining generate-sub-csl \
     --output "csl-$1.txt" \
-    --formulas 1000 \
+    --formulas "$n_formulas" \
     --alphabet "${@:2}" \
     --leaf-probability 0.9 \
     --min-duration 0s --max-duration 2h \
     --seed $#
 
-  for a in $(seq 0 99); do
+  for a in $(seq 0 $(("$n_automata" - 1))); do
     heat-pump-mining generate-traces \
       --automaton "automaton-$1-$a.dot" \
       --output "traces-$1-$a.json.zst" \
-      --traces 1000 \
-      --mean-length 10000 \
+      --traces "$n_traces" \
+      --mean-length "$trace_length" \
       --exponential-distribution \
       --seconds \
       --seed $#
@@ -44,14 +84,24 @@ run_evaluation() {
     heat-pump-mining evaluate-sub-csl \
       --sub-csl "csl-$1.txt" \
       --traces "traces-$1-$a.json.zst" \
-      --output "csl-results-$1-$a.txt"
+      --output "csl-results-$1-$a.csv"
   done
 
-  for left in $(seq 0 99); do
-    for right in $(seq 0 99); do
+  echo "left,right,cslScore,rsScore" >csl-rs-"$1"-2-sb.csv
+  echo "left,right,cslScore,rsScore" >csl-rs-"$1"-2-sr.csv
+  echo "left,right,cslScore,rsScore" >csl-rs-"$1"-2-gr.csv
+
+  for left in $(seq 0 $(("$n_automata" - 1))); do
+    for right in $(seq 0 $(("$n_automata" - 1))); do
+      compute_sub_csl_score "$1" 2 "$left" "$right"
+
       compute_revision_score "$1" sb "$left" "$right" --single-best
       compute_revision_score "$1" sr "$left" "$right" --single-rooted
-      compute_revision_score "$1" gb "$left" "$right" --global
+      compute_revision_score "$1" gr "$left" "$right" --global
+
+      compute_comparison "$1" 2 sb "$left" "$right" >>csl-rs-"$1"-2-sb.csv
+      compute_comparison "$1" 2 sr "$left" "$right" >>csl-rs-"$1"-2-sr.csv
+      compute_comparison "$1" 2 gr "$left" "$right" >>csl-rs-"$1"-2-gr.csv
     done
   done
 }
