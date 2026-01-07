@@ -9,7 +9,7 @@
 This repository contains the HPM tools for
 
 1. Automaton and SubCSL synthesis
-2. Trage generation
+2. Trace generation
 3. Data import from Nibe ZIP format
 4. Trace selection and merging
 5. Learning

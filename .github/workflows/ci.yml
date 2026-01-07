@@ -56,5 +56,5 @@ jobs:
             build/jpackage/*.rpm
       - uses: actions/upload-artifact@v6
         with:
-          name: Singluarity
+          name: Singularity
           path: build/singularity/*.sif
