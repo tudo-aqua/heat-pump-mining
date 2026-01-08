@@ -7,7 +7,7 @@ set -euxo pipefail
 
 n_automata="${1:-100}"
 states_min_factor="${2:-25}"
-states_max_factor="${2:-50}"
+states_max_factor="${3:-50}"
 n_formulas="${4:-1000}"
 n_traces="${5:-1000}"
 trace_length="${6:-10000}"
