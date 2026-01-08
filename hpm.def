@@ -20,7 +20,7 @@ From: ubuntu:rolling
 %post
   export DEBIAN_FRONTEND=noninteractive
   apt-get update
-  apt-get install -y --no-install-recommends ./heat-pump-mining_0.0.0_amd64.deb csvkit jq
+  apt-get install -y --no-install-recommends ./heat-pump-mining_0.0.0_amd64.deb csvkit gawk jq
   rm -rf /heat-pump-mining_0.0.0_amd64.deb /var/lib/apt/lists/*
 
   ln -s /opt/heat-pump-mining/bin/heat-pump-mining /usr/local/bin

@@ -12,6 +12,10 @@ n_formulas="${4:-1000}"
 n_traces="${5:-1000}"
 trace_length="${6:-10000}"
 
+exponents=(1 2)
+modes_short=(sb sr gr)
+modes_flags=(--single-best --single-rooted --global)
+
 compute_sub_csl_score() {
   if [[ "$3" != "$4" ]]; then name="$3-$4"; else name="$3-self"; fi
 
@@ -23,13 +27,13 @@ compute_sub_csl_score() {
 
   echo "$csl_data" | tail -n+2 | while IFS='', read -r formula left right; do
     echo -n "$formula,$left,$right,"
-    echo "$left $right $2" | awk -v OFMT='%f' '{ print ($1 - $2)^$3 }'
+    echo "$left $right $2" | gawk -v OFMT='%f' '{ $r=($1 - $2)^$3; print ($r < 0) ? -$r : $r }'
   done >>"csl-score-e$2-$1-$name.csv"
 
   mean_ss1="$(LC_ALL=C csvstat -c satisfactionShare --mean "csl-score-e$2-$1-$name.csv")"
   mean_ss2="$(LC_ALL=C csvstat -c satisfactionShare2 --mean "csl-score-e$2-$1-$name.csv")"
   mean_d="$(echo "$(LC_ALL=C csvstat -c delta --mean "csl-score-e$2-$1-$name.csv") $2" |
-    awk -v OFMT='%f' '{ print 1-$1^(1/$2) }')"
+    gawk -v OFMT='%f' '{ print 1-$1^(1/$2) }')"
   echo "<average>,$mean_ss1,$mean_ss2,$mean_d" >>"csl-score-e$2-$1-$name.csv"
 }
 
@@ -87,21 +91,27 @@ run_evaluation() {
       --output "csl-results-$1-$a.csv"
   done
 
-  echo "left,right,cslScore,rsScore" >csl-rs-"$1"-2-sb.csv
-  echo "left,right,cslScore,rsScore" >csl-rs-"$1"-2-sr.csv
-  echo "left,right,cslScore,rsScore" >csl-rs-"$1"-2-gr.csv
+  for e in "${exponents[@]}"; do
+    for m in "${modes_short[@]}"; do
+      echo "left,right,cslScore,rsScore" >"csl-rs-$1-$e-$m.csv"
+    done
+  done
 
   for left in $(seq 0 $(("$n_automata" - 1))); do
     for right in $(seq 0 $(("$n_automata" - 1))); do
-      compute_sub_csl_score "$1" 2 "$left" "$right"
+      for e in "${exponents[@]}"; do
+        compute_sub_csl_score "$1" "$e" "$left" "$right"
+      done
 
-      compute_revision_score "$1" sb "$left" "$right" --single-best
-      compute_revision_score "$1" sr "$left" "$right" --single-rooted
-      compute_revision_score "$1" gr "$left" "$right" --global
+      for mi in $(seq 0 $(("${#modes_short[*]}" - 1))); do
+        compute_revision_score "$1" "${modes_short[$mi]}" "$left" "$right" "${modes_flags[$mi]}"
+      done
 
-      compute_comparison "$1" 2 sb "$left" "$right" >>csl-rs-"$1"-2-sb.csv
-      compute_comparison "$1" 2 sr "$left" "$right" >>csl-rs-"$1"-2-sr.csv
-      compute_comparison "$1" 2 gr "$left" "$right" >>csl-rs-"$1"-2-gr.csv
+      for e in "${exponents[@]}"; do
+        for m in "${modes_short[@]}"; do
+          compute_comparison "$1" "$e" "$m" "$left" "$right" >>"csl-rs-$1-$e-$m.csv"
+        done
+      done
     done
   done
 }
