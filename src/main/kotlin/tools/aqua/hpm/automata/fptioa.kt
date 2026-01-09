@@ -5,6 +5,7 @@
 package tools.aqua.hpm.automata
 
 import kotlin.math.roundToInt
+import kotlin.time.Duration.Companion.ZERO
 import net.automatalib.automaton.MutableAutomaton
 import net.automatalib.automaton.UniversalAutomaton
 import net.automatalib.automaton.concept.MutableProbabilistic
@@ -19,10 +20,7 @@ import net.automatalib.visualization.VisualizationHelper
 import net.automatalib.visualization.VisualizationHelper.CommonAttrs.COLOR
 import net.automatalib.visualization.VisualizationHelper.CommonAttrs.LABEL
 import tools.aqua.hpm.util.average
-import tools.aqua.hpm.util.standardDeviation
 import tools.aqua.hpm.util.standardDeviationOrNull
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.ZERO
 
 interface FrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, O> :
     UniversalAutomaton<S, I, T, TimedOutput<O>, FrequencyAndProbability>,
