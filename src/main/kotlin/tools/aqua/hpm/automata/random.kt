@@ -30,8 +30,8 @@ class DFTPIOAGenerator<I, O>(
 
     val statesByOutput = outputs.associateWith { mutableListOf<DFPTIOState>() }
 
-    // select an output for the initial state
-    val initialTimedOutput = randomOutput()
+    // select first output for the initial state
+    val initialTimedOutput = outputs.first().randomTimed()
     statesByOutput.getValue(initialTimedOutput.output) +=
         automaton.addInitialState(initialTimedOutput)
 
