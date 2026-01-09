@@ -20,6 +20,9 @@ import net.automatalib.visualization.VisualizationHelper.CommonAttrs.COLOR
 import net.automatalib.visualization.VisualizationHelper.CommonAttrs.LABEL
 import tools.aqua.hpm.util.average
 import tools.aqua.hpm.util.standardDeviation
+import tools.aqua.hpm.util.standardDeviationOrNull
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.ZERO
 
 interface FrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, O> :
     UniversalAutomaton<S, I, T, TimedOutput<O>, FrequencyAndProbability>,
@@ -108,7 +111,7 @@ open class FrequencyProbabilisticTimedAutomatonVisualizationHelper<
 
     val timeData =
         if (simplify) {
-          "tAvg=${exitTimes.average()} / tSD=${exitTimes.standardDeviation()}"
+          "tAvg=${exitTimes.average()} / tSD=${exitTimes.standardDeviationOrNull() ?: ZERO}"
         } else {
           "t=${exitTimes.joinToString(", ", "[", "]")}"
         }
