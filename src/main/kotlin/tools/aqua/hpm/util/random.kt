@@ -5,6 +5,7 @@
 package tools.aqua.hpm.util
 
 import java.math.BigInteger
+import kotlin.collections.filterTo
 import kotlin.math.ln
 import kotlin.random.Random
 import kotlin.random.asJavaRandom
@@ -39,3 +40,13 @@ fun Random.nextDuration(range: ClosedRange<Duration>): Duration =
       val nanoseconds = if (ns == 0) ZERO else nextInt(ns).nanoseconds
       seconds + nanoseconds
     } + range.start
+
+fun <T> Random.nextSubset(set: Set<T>): Set<T> = set.filterTo(mutableSetOf()) { nextBoolean() }
+
+fun <T> Random.nextNonTrivialSubset(set: Set<T>): Set<T> {
+  require(set.size > 1) { "no non-trivial subsets" }
+  return runUntil(
+      { nextSubset(set) },
+      { it.isNotEmpty() && it.size != set.size },
+  )
+}

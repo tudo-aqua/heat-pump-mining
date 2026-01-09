@@ -71,7 +71,6 @@ run_evaluation() {
     --output "csl-$1.txt" \
     --formulas "$n_formulas" \
     --alphabet "${@:2}" \
-    --leaf-probability 0.9 \
     --min-duration 0s --max-duration 2h \
     --seed $#
 

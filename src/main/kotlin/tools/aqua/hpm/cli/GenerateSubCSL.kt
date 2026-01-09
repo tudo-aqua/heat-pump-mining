@@ -11,7 +11,6 @@ import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.options.varargValues
-import com.github.ajalt.clikt.parameters.types.double
 import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.long
 import com.github.ajalt.clikt.parameters.types.path
@@ -25,8 +24,6 @@ class GenerateSubCSL : CliktCommand("generate-sub-csl") {
   val output by option("-o", "--output").path(canBeDir = false).required()
   val nFormulas by option("-n", "--formulas").int().default(1).check { it >= 1 }
   val alphabet by option("-a", "--alphabet").varargValues().required()
-  val leafProbability by
-      option("-l", "--leaf-probability").double().default(0.25).check { it > 0 && it <= 1 }
   val minDuration by
       option("-d", "--min-duration").convert { Duration.Companion.parse(it) }.required()
   val maxDuration by
@@ -37,8 +34,7 @@ class GenerateSubCSL : CliktCommand("generate-sub-csl") {
   val seed by option("-s", "--seed").long().default(0)
 
   override fun run() {
-    val generator =
-        SubCSLFormulaGenerator(alphabet, leafProbability, minDuration..maxDuration, Random(seed))
+    val generator = SubCSLFormulaGenerator(alphabet, minDuration..maxDuration, Random(seed))
 
     output.createParentDirectories().bufferedWriter().use { out ->
       generator.asSequence().take(nFormulas).forEach { out.appendLine(it.toString()) }

@@ -6,50 +6,59 @@ package tools.aqua.hpm.subcsl
 
 import kotlin.random.Random
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.ZERO
 import tools.aqua.hpm.util.nextDuration
+import tools.aqua.hpm.util.nextNonTrivialSubset
 import tools.aqua.hpm.util.orderedRangeTo
 import tools.aqua.hpm.util.runOneOf
+import tools.aqua.hpm.util.runUntil
 
 class SubCSLFormulaGenerator<A>(
-    private val alphabet: Collection<A>,
-    private val leafProbability: Double,
+    alphabet: Collection<A>,
     private val durationRange: ClosedRange<Duration>,
     private val random: Random,
 ) : Iterator<TrueSubCSLFormula<A>> {
-
   init {
-    require(leafProbability > 0.0 && leafProbability <= 1.0) {
-      "leaf probability must be in (0, 1]"
+    require(alphabet.size >= 2) {
+      "alphabet must have at least 2 elements to create non-trivial formulas"
     }
-    require(durationRange.start >= ZERO) { "duration range must not be in the past" }
   }
+
+  private val alphabet = alphabet.toSet()
 
   override fun hasNext(): Boolean = true
 
   override fun next(): TrueSubCSLFormula<A> =
       random.runOneOf(
-          {
-            Until(
-                generatePropositional(Unit),
-                generateDurationInterval(),
-                generatePropositional(Unit),
-            )
-          },
-          { Finally(generateDurationInterval(), generatePropositional(Unit)) },
-          { Global(generateDurationInterval(), generatePropositional(Unit)) },
+          ::generateUntil,
+          ::generateFinally,
+          ::generateGlobal,
       )
+
+  private fun generateUntil(): Until<A> {
+    val left = random.nextNonTrivialSubset(alphabet)
+    val right =
+        runUntil(
+            { random.nextNonTrivialSubset(alphabet) },
+            { it != left },
+        )
+    return Until(left.toPropositional(), generateDurationInterval(), right.toPropositional())
+  }
+
+  private fun generateFinally(): Finally<A> =
+      Finally(generateDurationInterval(), random.nextNonTrivialSubset(alphabet).toPropositional())
+
+  private fun generateGlobal(): Global<A> =
+      Global(generateDurationInterval(), random.nextNonTrivialSubset(alphabet).toPropositional())
+
+  private fun Set<A>.toPropositional(): PropositionalFormula<A> =
+      fold<A, PropositionalFormula<A>>(True()) { acc, symbol ->
+        if (acc is True) {
+          Output(symbol)
+        } else {
+          Or(acc, Output(symbol))
+        }
+      }
 
   private fun generateDurationInterval(): ClosedRange<Duration> =
       random.nextDuration(durationRange) orderedRangeTo random.nextDuration(durationRange)
-
-  private val generatePropositional =
-      DeepRecursiveFunction<Unit, PropositionalFormula<A>> {
-        if (random.nextDouble() <= leafProbability) {
-              Output(alphabet.random(random))
-            } else {
-              Or(callRecursive(Unit), callRecursive(Unit))
-            }
-            .let { if (random.nextBoolean()) it else Not(it) }
-      }
 }
