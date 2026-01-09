@@ -28,9 +28,9 @@ class GenerateSubCSL : CliktCommand("generate-sub-csl") {
   val variableProbability by
       option("-v", "--variable-probability").double().default(0.5).check { it > 0 && it <= 1 }
   val minIntervalStart by
-      option("-s", "--min-interval-start").convert { Duration.parse(it) }.required()
+      option("-i", "--min-interval-start").convert { Duration.parse(it) }.required()
   val maxIntervalStart by
-      option("-S", "--max-interval-start")
+      option("-I", "--max-interval-start")
           .convert { Duration.parse(it) }
           .required()
           .check { it >= minIntervalStart }
