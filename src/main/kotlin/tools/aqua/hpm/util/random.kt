@@ -50,3 +50,11 @@ fun <T> Random.nextNonTrivialSubset(set: Set<T>): Set<T> {
       { it.isNotEmpty() && it.size != set.size },
   )
 }
+
+fun <T> Random.nextNonEmptySubset(set: Set<T>): Set<T> {
+  require(set.isNotEmpty()) { "no non-trivial subsets" }
+  return runUntil(
+      { nextSubset(set) },
+      { it.isNotEmpty() },
+  )
+}

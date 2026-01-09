@@ -7,10 +7,10 @@ package tools.aqua.hpm.subcsl
 import kotlin.random.Random
 import kotlin.time.Duration
 import tools.aqua.hpm.util.nextDuration
+import tools.aqua.hpm.util.nextNonEmptySubset
 import tools.aqua.hpm.util.nextNonTrivialSubset
 import tools.aqua.hpm.util.orderedRangeTo
 import tools.aqua.hpm.util.runOneOf
-import tools.aqua.hpm.util.runUntil
 
 class SubCSLFormulaGenerator<A>(
     alphabet: Collection<A>,
@@ -36,11 +36,7 @@ class SubCSLFormulaGenerator<A>(
 
   private fun generateUntil(): Until<A> {
     val left = random.nextNonTrivialSubset(alphabet)
-    val right =
-        runUntil(
-            { random.nextNonTrivialSubset(alphabet) },
-            { it != left },
-        )
+    val right = random.nextNonEmptySubset(alphabet - left)
     return Until(left.toPropositional(), generateDurationInterval(), right.toPropositional())
   }
 
