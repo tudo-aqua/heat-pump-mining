@@ -27,12 +27,20 @@ class GenerateSubCSL : CliktCommand("generate-sub-csl") {
   val alphabet by option("-a", "--alphabet").varargValues().required()
   val variableProbability by
       option("-v", "--variable-probability").double().default(0.5).check { it > 0 && it <= 1 }
-  val minDuration by option("-d", "--min-duration").convert { Duration.parse(it) }.required()
-  val maxDuration by
-      option("-D", "--max-duration")
+  val minIntervalStart by
+      option("-s", "--min-interval-start").convert { Duration.parse(it) }.required()
+  val maxIntervalStart by
+      option("-S", "--max-interval-start")
           .convert { Duration.parse(it) }
           .required()
-          .check { it >= minDuration }
+          .check { it >= minIntervalStart }
+  val minIntervalDuration by
+      option("-d", "--min-interval-duration").convert { Duration.parse(it) }.required()
+  val maxIntervalDuration by
+      option("-D", "--max-interval-duration")
+          .convert { Duration.parse(it) }
+          .required()
+          .check { it >= minIntervalDuration }
   val seed by option("-s", "--seed").long().default(0)
 
   override fun run() {
@@ -40,7 +48,8 @@ class GenerateSubCSL : CliktCommand("generate-sub-csl") {
         SubCSLFormulaGenerator(
             alphabet,
             variableProbability,
-            minDuration..maxDuration,
+            minIntervalStart..maxIntervalStart,
+            minIntervalDuration..maxIntervalDuration,
             Random(seed),
         )
 

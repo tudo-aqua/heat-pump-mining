@@ -169,8 +169,10 @@ Options:
 - `--alphabet o_1 o_2 …` the output alphabet to use.
 - `--variable-probability n` the probability that a variable is selected for a propositional clause.
   Hiigher values yield easier-to-satisfy formulas.
-- `--min-duration n --max-duration m` defines the range of acceptable durations for the temporal
-  operator to generate.
+- `--min-interval-start n --max-interval-start m` defines the range of acceptable interval start
+  points for the temporal operator to generate.
+- `--min-interval-duration n --max-interval-duration m` defines the range of acceptable interval
+  lengths for the temporal operator to generate.
 - `--seed n` defines the generation seed, defaults to zero.
 
 ### Trace Generator

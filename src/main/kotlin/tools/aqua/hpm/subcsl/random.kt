@@ -9,13 +9,13 @@ import kotlin.time.Duration
 import tools.aqua.hpm.util.nextDuration
 import tools.aqua.hpm.util.nextNonEmptySubset
 import tools.aqua.hpm.util.nextNonTrivialSubset
-import tools.aqua.hpm.util.orderedRangeTo
 import tools.aqua.hpm.util.runOneOf
 
 class SubCSLFormulaGenerator<A>(
     alphabet: Collection<A>,
     private val variableSelectionProbability: Double,
-    private val durationRange: ClosedRange<Duration>,
+    private val intervalStart: ClosedRange<Duration>,
+    private val intervalDuration: ClosedRange<Duration>,
     private val random: Random,
 ) : Iterator<TrueSubCSLFormula<A>> {
   init {
@@ -62,6 +62,9 @@ class SubCSLFormulaGenerator<A>(
         }
       }
 
-  private fun generateDurationInterval(): ClosedRange<Duration> =
-      random.nextDuration(durationRange) orderedRangeTo random.nextDuration(durationRange)
+  private fun generateDurationInterval(): ClosedRange<Duration> {
+    val start = random.nextDuration(intervalStart)
+    val end = start + random.nextDuration(intervalDuration)
+    return start..end
+  }
 }

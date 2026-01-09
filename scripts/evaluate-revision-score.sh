@@ -71,7 +71,8 @@ run_evaluation() {
     --output "csl-$1.txt" \
     --formulas "$n_formulas" \
     --alphabet "${@:2}" \
-    --min-duration 0s --max-duration 2h \
+    --min-interval-start 0s --max-interval-start 2h \
+    --min-interval-duration 5m --max-interval-duration 15m \
     --seed $#
 
   for a in $(seq 0 $(("$n_automata" - 1))); do
