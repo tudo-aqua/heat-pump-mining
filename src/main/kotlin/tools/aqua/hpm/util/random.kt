@@ -41,9 +41,23 @@ fun Random.nextDuration(range: ClosedRange<Duration>): Duration =
       seconds + nanoseconds
     } + range.start
 
-fun <T> Random.nextSubset(set: Set<T>): Set<T> = set.filterTo(mutableSetOf()) { nextBoolean() }
+fun Random.nextBoolean(trueBias: Double = 0.5): Boolean {
+  require(trueBias in 0.0..1.0)
+  return when (trueBias) {
+    0.0 -> false
+    0.5 -> nextBoolean()
+    1.0 -> true
+    else -> nextDouble() < trueBias
+  }
+}
 
-fun <T> Random.nextNonTrivialSubset(set: Set<T>): Set<T> {
+fun <T> Random.nextSubset(set: Set<T>, variableSelectionProbability: Double = 0.5): Set<T> =
+    set.filterTo(mutableSetOf()) { nextBoolean(variableSelectionProbability) }
+
+fun <T> Random.nextNonTrivialSubset(
+    set: Set<T>,
+    variableSelectionProbability: Double = 0.5,
+): Set<T> {
   require(set.size > 1) { "no non-trivial subsets" }
   return runUntil(
       { nextSubset(set) },
@@ -51,7 +65,7 @@ fun <T> Random.nextNonTrivialSubset(set: Set<T>): Set<T> {
   )
 }
 
-fun <T> Random.nextNonEmptySubset(set: Set<T>): Set<T> {
+fun <T> Random.nextNonEmptySubset(set: Set<T>, variableSelectionProbability: Double = 0.5): Set<T> {
   require(set.isNotEmpty()) { "no non-trivial subsets" }
   return runUntil(
       { nextSubset(set) },

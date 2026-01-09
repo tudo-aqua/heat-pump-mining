@@ -14,6 +14,7 @@ import tools.aqua.hpm.util.runOneOf
 
 class SubCSLFormulaGenerator<A>(
     alphabet: Collection<A>,
+    private val variableSelectionProbability: Double,
     private val durationRange: ClosedRange<Duration>,
     private val random: Random,
 ) : Iterator<TrueSubCSLFormula<A>> {
@@ -35,16 +36,22 @@ class SubCSLFormulaGenerator<A>(
       )
 
   private fun generateUntil(): Until<A> {
-    val left = random.nextNonTrivialSubset(alphabet)
-    val right = random.nextNonEmptySubset(alphabet - left)
+    val left = random.nextNonTrivialSubset(alphabet, variableSelectionProbability)
+    val right = random.nextNonEmptySubset(alphabet - left, variableSelectionProbability)
     return Until(left.toPropositional(), generateDurationInterval(), right.toPropositional())
   }
 
   private fun generateFinally(): Finally<A> =
-      Finally(generateDurationInterval(), random.nextNonTrivialSubset(alphabet).toPropositional())
+      Finally(
+          generateDurationInterval(),
+          random.nextNonTrivialSubset(alphabet, variableSelectionProbability).toPropositional(),
+      )
 
   private fun generateGlobal(): Global<A> =
-      Global(generateDurationInterval(), random.nextNonTrivialSubset(alphabet).toPropositional())
+      Global(
+          generateDurationInterval(),
+          random.nextNonTrivialSubset(alphabet, variableSelectionProbability).toPropositional(),
+      )
 
   private fun Set<A>.toPropositional(): PropositionalFormula<A> =
       fold<A, PropositionalFormula<A>>(True()) { acc, symbol ->

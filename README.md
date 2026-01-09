@@ -167,8 +167,8 @@ Options:
 - `--output formulas.txt` target file.
 - `--formulas n` number of formulas to generate, defaults to one.
 - `--alphabet o_1 o_2 …` the output alphabet to use.
-- `--leaf-probability n` the probability that in each generation step for a propositional
-  sub-formula, a literal is created. Lower values yield more complex formulas.
+- `--variable-probability n` the probability that a variable is selected for a propositional clause.
+  Hiigher values yield easier-to-satisfy formulas.
 - `--min-duration n --max-duration m` defines the range of acceptable durations for the temporal
   operator to generate.
 - `--seed n` defines the generation seed, defaults to zero.
