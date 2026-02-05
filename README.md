@@ -258,9 +258,16 @@ Options:
 
 ### Select and Merge
 
-Selects a subset of events from the inputs. This requires a key event and a list of events. It then
-uses the change points detected for the key event to segment the trace resulting from the
-combination of all selected events. The change points for non-key events are ignored.
+Selects a subset of events from the inputs and splits the merged log into sub-logs according to one
+of four modes. The modes are:
+
+1. Single Trace: No splitting is performed.
+2. Key Event: An event is chosen as the key event. For each log provided for the key event, the
+   first event is used to split the log (i.e., [<key_1>, … <key_2>), [<key_2>, …, <key_3>), etc.).
+   Optionally, events preceding the first such event are retained (the prefix).
+3. Start of Day: A specific time is chosen to start a new split.
+4. Interval: A sub-day interval is chosen to split the log. The intervals are aligned at midnight,
+   UTC.
 
 Usage:
 
@@ -270,11 +277,9 @@ heat-pump-mining select-and-merge <options>
 
 Options:
 
-- `--input data.json.zst` the input database from a `creat-format` invocation.
+- `--input data.json.zst` the input database from a `convert-format` invocation.
 - `--output traces.json.zst` the merged trace database.
 - `--events e_1 e_2 …` the events to include.
-- `--split-event e` the key event.
-- one of `--use-only-first` (only use the 0th trace, creating one long trace),
-  `--use-all-overlapping` (use all traces as is, yielding redundant data), and
-  `use-all-non-overlapping` (segment the sub-traces, yielding many non-overlapping traces;
-  recommended default).
+- one of `--single` (Single Trace mode), `--key-event e_k` (Key Event without prefix),
+  `--key-event-with-prefix e_k` (Key Event with prefix), `--start-of-day-utc HH:MM` (Start of Day at
+  the given time in UTC), or `--interval i` (Interval with the given interval duration).
