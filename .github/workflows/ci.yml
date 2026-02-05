@@ -5,7 +5,7 @@
 name: CI/CD
 
 env:
-  SINGULARITY_VERSION: 4.3.5
+  SINGULARITY_VERSION: 4.3.7
 
 on:
   push:
