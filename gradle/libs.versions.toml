@@ -28,7 +28,7 @@ versions = { id = "com.github.ben-manes.versions", version = "0.53.0" }
 
 [libraries]
 
-assertj-core = { group = "org.assertj", name = "assertj-core", version = "3.27.6" }
+assertj-core = { group = "org.assertj", name = "assertj-core", version = "3.27.7" }
 clikt = { group = "com.github.ajalt.clikt", name = "clikt", version = "5.1.0" }
 commons-math = { group = "org.apache.commons", name = "commons-math3", version = "3.6.1" }
 csv = { group = "com.github.doyaaaaaken", name = "kotlin-csv-jvm", version = "1.10.0" }
