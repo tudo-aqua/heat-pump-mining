@@ -19,15 +19,33 @@ fun <S, I, T> UniversalAutomaton<S, I, T, *, *>.writeDot(path: Path, alphabet: C
       .writeModel(path.toFile(), transitionGraphView(alphabet))
 }
 
+data class RenderConfig(
+    val simplify: Boolean,
+    val transitionFullColorMin: Double,
+    val transitionRenderMin: Double,
+    val probabilityDecimals: Int,
+    val timeSubcomponents: Int,
+) {
+  init {
+    require(transitionFullColorMin in 0.0..1.0)
+    require(transitionRenderMin in 0.0..1.0)
+    require(probabilityDecimals >= 0)
+    require(timeSubcomponents >= 0)
+  }
+
+  companion object {
+    val Full = RenderConfig(false, 0.0, 0.0, Int.MAX_VALUE, Int.MAX_VALUE)
+  }
+}
+
 fun <S, I, T> FrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, *>.writeRenderDot(
     path: Path,
     alphabet: Collection<I>,
-    transitionFullColorMin: Double,
-    transitionRenderMin: Double,
+    renderConfig: RenderConfig,
 ) {
   DOTSerializationProvider.getInstance<S, TransitionEdge<I, T>>()
       .writeModel(
           path.toFile(),
-          renderTransitionGraphView(alphabet, transitionFullColorMin, transitionRenderMin),
+          renderTransitionGraphView(alphabet, renderConfig),
       )
 }

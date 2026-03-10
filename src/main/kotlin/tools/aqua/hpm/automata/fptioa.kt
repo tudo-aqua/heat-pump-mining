@@ -4,6 +4,7 @@
 
 package tools.aqua.hpm.automata
 
+import java.util.Locale.ROOT
 import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.ZERO
 import net.automatalib.automaton.MutableAutomaton
@@ -19,8 +20,10 @@ import net.automatalib.graph.UniversalGraph
 import net.automatalib.visualization.VisualizationHelper
 import net.automatalib.visualization.VisualizationHelper.CommonAttrs.COLOR
 import net.automatalib.visualization.VisualizationHelper.CommonAttrs.LABEL
+import tools.aqua.hpm.util.RenderConfig
 import tools.aqua.hpm.util.average
 import tools.aqua.hpm.util.standardDeviationOrNull
+import tools.aqua.hpm.util.toApproximateString
 
 interface FrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, O> :
     UniversalAutomaton<S, I, T, TimedOutput<O>, FrequencyAndProbability>,
@@ -42,12 +45,11 @@ interface FrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, O> :
       TransitionEdge<I, T>,
       TimedOutput<O>,
       TransitionEdge.Property<I, FrequencyAndProbability>,
-  > = FrequencyProbabilisticTimedAutomatonGraphView(this, inputs)
+  > = FrequencyProbabilisticTimedAutomatonGraphView(this, inputs, RenderConfig.Full)
 
   fun renderTransitionGraphView(
       inputs: Collection<I>,
-      transitionFullColorMin: Double = 0.0,
-      transitionRenderMin: Double = 0.0,
+      renderConfig: RenderConfig,
   ): UniversalGraph<
       S,
       TransitionEdge<I, T>,
@@ -57,9 +59,7 @@ interface FrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, O> :
       FrequencyProbabilisticTimedAutomatonGraphView(
           this,
           inputs,
-          true,
-          transitionFullColorMin,
-          transitionRenderMin,
+          renderConfig,
       )
 }
 
@@ -72,9 +72,7 @@ open class FrequencyProbabilisticTimedAutomatonGraphView<
 >(
     automaton: A,
     inputs: Collection<I>,
-    private val simplify: Boolean = false,
-    private val transitionFullColorMin: Double = 0.0,
-    private val transitionRenderMin: Double = 0.0,
+    private val renderConfig: RenderConfig,
 ) :
     UniversalAutomatonGraphView<S, I, T, TimedOutput<O>, FrequencyAndProbability, A>(
         automaton,
@@ -83,9 +81,7 @@ open class FrequencyProbabilisticTimedAutomatonGraphView<
   override fun getVisualizationHelper(): VisualizationHelper<S, TransitionEdge<I, T>> =
       FrequencyProbabilisticTimedAutomatonVisualizationHelper(
           automaton,
-          simplify,
-          transitionFullColorMin,
-          transitionRenderMin,
+          renderConfig,
       )
 }
 
@@ -97,9 +93,7 @@ open class FrequencyProbabilisticTimedAutomatonVisualizationHelper<
     A : FrequencyProbabilisticTimedInputOutputAutomaton<S, I, T, O>,
 >(
     automaton: A,
-    private val simplify: Boolean = false,
-    private val transitionFullColorMin: Double = 0.0,
-    private val transitionRenderMin: Double = 0.0,
+    private val renderConfig: RenderConfig,
 ) : AutomatonVisualizationHelper<S, I, T, A>(automaton) {
 
   override fun getNodeProperties(node: S, properties: MutableMap<String, String>): Boolean {
@@ -107,9 +101,11 @@ open class FrequencyProbabilisticTimedAutomatonVisualizationHelper<
     val output = automaton.getStateOutput(node)
     val exitTimes = automaton.getExitTimes(node)
 
+    val (simplify, _, _, _, timeSubcomponents) = renderConfig
+
     val timeData =
         if (simplify) {
-          "tAvg=${exitTimes.average()} / tSD=${exitTimes.standardDeviationOrNull() ?: ZERO}"
+          "tAvg=${exitTimes.average().toApproximateString(timeSubcomponents)} / tSD=${(exitTimes.standardDeviationOrNull() ?: ZERO).toApproximateString(timeSubcomponents)}"
         } else {
           "t=${exitTimes.joinToString(", ", "[", "]")}"
         }
@@ -128,9 +124,11 @@ open class FrequencyProbabilisticTimedAutomatonVisualizationHelper<
     val freq = automaton.getTransitionFrequency(edge.transition)
     val prob = automaton.getTransitionProbability(edge.transition)
 
+    val (simplify, transitionFullColorMin, transitionRenderMin, probabilityDecimals) = renderConfig
+
     val probData =
         if (simplify) {
-          "p=${"%.2f".format(prob)}"
+          "p=${"%.${probabilityDecimals}f".format(ROOT, prob)}"
         } else {
           "n=$freq / p=$prob"
         }

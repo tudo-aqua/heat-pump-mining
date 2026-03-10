@@ -255,6 +255,11 @@ Options:
 - `--full-color-min i` the probability above which a transition is rendered in black. Transitions
   below this are rendered in grayscale proportional to their likeliness. Defaults to zero.
 - `--render-min i` the minimum probability to render a transition at all. Defaults to zero.
+- `--probability-decimals i` the number of decimal places to use when rendering probabilities.
+  Defaults to two.
+- `--time-subcomponents i` the number of additional time components to render beyond the dominant
+  one. Example: for 1, the duration 1:20:30 will be rendered as `1h 20m` and 1:00:30 will be
+  rendered as `1h`. This does not perform rounding from dropped components! Defaults to one.
 
 ### Select and Merge
 

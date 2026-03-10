@@ -10,9 +10,11 @@ import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.types.double
+import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.path
 import kotlin.io.path.createParentDirectories
 import tools.aqua.hpm.automata.dfptioParser
+import tools.aqua.hpm.util.RenderConfig
 import tools.aqua.hpm.util.component1
 import tools.aqua.hpm.util.component2
 import tools.aqua.hpm.util.writeRenderDot
@@ -28,8 +30,16 @@ class RenderAutomaton : CliktCommand() {
       option("-f", "--full-color-min").double().default(0.0).check { it in 0.0..1.0 }
   val renderMin by option("-r", "--render-min").double().default(0.0).check { it in 0.0..1.0 }
 
+  val probabilityDecimals by
+      option("-p", "--probability-decimals").int().default(2).check { it >= 0 }
+  val timeSubcomponents by option("-t", "--time-subcomponents").int().default(1).check { it >= 0 }
+
   override fun run() {
     val (alphabet, automaton) = dfptioParser.readModel(input.toFile())
-    automaton.writeRenderDot(output.createParentDirectories(), alphabet, fullColorMin, renderMin)
+    automaton.writeRenderDot(
+        output.createParentDirectories(),
+        alphabet,
+        RenderConfig(true, fullColorMin, renderMin, probabilityDecimals, timeSubcomponents),
+    )
   }
 }
