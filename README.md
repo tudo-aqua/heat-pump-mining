@@ -74,6 +74,23 @@ Options:
 - `--events event_1 event_2 …` the target events for hitting time prediction.
 - `--samples n` the number of prefix-suffix splits to perform.
 
+### States-per-Output Computation
+
+A validation tool that counts the number of states per output symbol. A low value may indicate
+overfitting, with a value of one indicating that the automaton does not use historical information
+at all.
+
+Usage:
+
+```shell
+heat-pump-mining compute-states-per-output <options>
+```
+
+Options:
+
+- `--automaton automaton.dot` the automaton to measure.
+- `--output results.csv` results file, defaults to standard output.
+
 ### Revision Score Computation
 
 A validation tool that computes the revision score for a given trace database, i.e., the agreement
@@ -97,6 +114,22 @@ Options:
   scoring with initial state root), and `--global` (global scoring with initial state root).
 - - `--parallel` enable multithreaded computation, only for `--singlle` modes.
 - `--frequency-weight n` score bias between frequencies and times, defaults to 0.5.
+
+### Timing Dispersion Computation
+
+A validation tool that computes the dispersion of observed timings per state, i.e., the timings'
+standard deviation divided by the average. A high value may indicate overfitting.
+
+Usage:
+
+```shell
+heat-pump-mining compute-timing-dispersion <options>
+```
+
+Options:
+
+- `--automaton automaton.dot` the automaton to measure.
+- `--output results.csv` results file, defaults to standard output.
 
 ### Convert Formats
 

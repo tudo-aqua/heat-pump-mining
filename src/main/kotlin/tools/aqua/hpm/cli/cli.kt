@@ -16,7 +16,9 @@ fun main(args: Array<String>) =
     CLI()
         .subcommands(
             ComputeHittingTimes(),
+            ComputeStatesPerOutput(),
             ComputeRevisionScore(),
+            ComputeTimingDispersion(),
             ConvertFormat(),
             EvaluateSubCSL(),
             GenerateAutomata(),
