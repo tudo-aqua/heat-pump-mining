@@ -10,4 +10,4 @@ private val STANDARD_DEVIATION = StandardDeviation()
 
 fun standardDeviation(values: DoubleArray): Double = STANDARD_DEVIATION.evaluate(values)
 
-fun Iterable<Double>.standardDeviation(): Double = standardDeviation(doubleArrayOf())
+fun Iterable<Double>.standardDeviation(): Double = standardDeviation(toList().toDoubleArray())

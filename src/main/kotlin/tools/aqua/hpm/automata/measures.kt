@@ -4,6 +4,7 @@
 
 package tools.aqua.hpm.automata
 
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.ZERO
 import tools.aqua.hpm.util.average
 import tools.aqua.hpm.util.standardDeviationOrNull
@@ -16,5 +17,11 @@ fun <S, O> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S, *, *,
     .getStatesWithOutput(output: O): Collection<S> = states.filter { getStateOutput(it) == output }
 
 fun <S> DeterministicFrequencyProbabilisticTimedInputOutputAutomaton<S, *, *, *>
-    .getTimingDispersion(state: S): Double =
-    getExitTimes(state).let { times -> (times.standardDeviationOrNull() ?: ZERO) / times.average() }
+    .getTimingDispersion(state: S): Double = getExitTimes(state).let { times -> times.dispersion }
+
+private val Collection<Duration>.dispersion: Double
+  get() {
+    val stddev = standardDeviationOrNull() ?: ZERO
+    val average = average()
+    return if (stddev == ZERO && average == ZERO) 0.0 else stddev / average
+  }

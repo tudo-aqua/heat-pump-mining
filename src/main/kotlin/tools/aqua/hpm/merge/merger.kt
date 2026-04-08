@@ -55,11 +55,14 @@ private fun Iterable<Log>.merge(): Log {
 private fun Log.splitIntervals(intervals: Iterable<OpenEndRange<Instant>>): List<Log> =
     intervals.mapIndexed { idx, it -> selectInterval(it, "$idx") }
 
-private fun Log.selectInterval(interval: OpenEndRange<Instant>, tag: String = ""): Log {
-  val first = entries.binarySearchBy(interval.start) { it.start(epoch!!) }
-  val afterLast = entries.binarySearchBy(interval.endExclusive) { it.start(epoch!!) }
-  return copy(name = "$name/$tag", entries = entries.subList(first, afterLast))
-}
+private fun Log.selectInterval(interval: OpenEndRange<Instant>, tag: String = ""): Log =
+    copy(
+        name = "$name/$tag",
+        entries =
+            entries
+                .dropWhile { it.start(epoch!!)!! < interval.start }
+                .takeWhile { it.start(epoch!!)!! < interval.endExclusive },
+    )
 
 fun LogArchive.selectAndMergeSingle(includeEvents: Set<String>): LogArchive =
     LogArchive(
@@ -73,6 +76,7 @@ fun LogArchive.selectAndMergeFromKey(
     includePrefix: Boolean,
 ): LogArchive {
   val keyEpochs = logs.filter { it.hpmName.event == keyEvent }.map { it.epoch!! }
+  require(keyEpochs.isNotEmpty()) { "key event missing from data" }
   val prefix = if (includePrefix) listOf(DISTANT_PAST..<keyEpochs.first()) else emptyList()
   val inner = keyEpochs.zipWithNext().map { (start, next) -> start..<next }
   val suffix = listOf(keyEpochs.last()..<DISTANT_FUTURE)
