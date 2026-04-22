@@ -9,6 +9,7 @@ import net.automatalib.common.util.Pair as APair
 import net.automatalib.serialization.dot.DOTMutableAutomatonParser
 import net.automatalib.serialization.dot.GraphDOT
 import net.automatalib.visualization.VisualizationHelper.CommonAttrs.LABEL
+import tools.aqua.hpm.util.splitOrEmpty
 
 val dfptioParser =
     DOTMutableAutomatonParser(
@@ -16,7 +17,9 @@ val dfptioParser =
         { attr ->
           val (output, times) = attr.getValue(LABEL).split(" / ")
           val exitTimes =
-              times.removePrefix("t=[").removeSuffix("]").split(", ").map { Duration.parse(it) }
+              times.removePrefix("t=[").removeSuffix("]").splitOrEmpty(", ").map {
+                Duration.parse(it)
+              }
           output.withExitTimes(exitTimes)
         },
         { attr ->

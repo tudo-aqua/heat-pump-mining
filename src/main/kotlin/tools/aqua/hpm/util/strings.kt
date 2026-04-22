@@ -20,3 +20,12 @@ fun String.endOfBracketedExpression(): Int {
 
   error("unterminated expression at depth $depth")
 }
+
+fun String.splitOrEmpty(
+    vararg delimiters: String,
+    ignoreCase: Boolean = false,
+    limit: Int = 0,
+): List<String> =
+    split(*delimiters, ignoreCase = ignoreCase, limit = limit).let { components ->
+      if (components.size == 1 && components.single() == this) emptyList() else components
+    }
