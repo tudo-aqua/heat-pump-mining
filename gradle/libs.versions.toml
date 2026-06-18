@@ -24,7 +24,7 @@ node = { id = "com.github.node-gradle.node", version = "7.1.0" }
 runtime = { id = "org.beryx.runtime", version = "2.0.1" }
 spotless = { id = "com.diffplug.spotless", version = "8.4.0" }
 taskTree = { id = "com.dorongold.task-tree", version = "4.0.1" }
-versions = { id = "com.github.ben-manes.versions", version = "0.53.0" }
+versions = { id = "com.github.ben-manes.versions", version = "0.54.0" }
 
 [libraries]
 
